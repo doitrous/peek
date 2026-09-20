@@ -273,6 +273,9 @@ final class AppController: NSObject, NSApplicationDelegate {
         let dash = menu.addItem(withTitle: "Switching Insights…", action: #selector(showDashboard), keyEquivalent: "d")
         dash.target = self
         menu.addItem(.separator())
+        let support = menu.addItem(withTitle: "Support Peek ♥", action: #selector(openSupport), keyEquivalent: "")
+        support.target = self
+        menu.addItem(.separator())
         let quit = menu.addItem(withTitle: "Quit Peek", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
         return menu
@@ -297,6 +300,10 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     @objc private func toggleSticky() {
         settings.stickyApps.toggle()                 // persists + onChange updates the checkmark
+    }
+
+    @objc private func openSupport() {
+        NSWorkspace.shared.open(peekDonateURL)
     }
 
     @objc private func showSettings() {
