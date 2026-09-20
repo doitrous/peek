@@ -1,0 +1,5 @@
+.build/
+.swiftpm/
+*.xcuserstate
+.DS_Store
+Peek.app/
