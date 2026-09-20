@@ -138,9 +138,10 @@ struct DashboardView: View {
         card("Your apps — switcher order") {
             let maxScore = max(model.affinity.first?.score ?? 1, 0.0001)
             if !model.stickyEnabled {
-                Label("Sticky apps is off — turn it on from the menu-bar icon to reorder and pin.",
+                Label("Sticky apps (learning) is off — pins still float to the top. Turn it on from the menu-bar icon to auto-favor your most-used apps.",
                       systemImage: "info.circle")
                     .font(.callout).foregroundStyle(.secondary).padding(.bottom, 4)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             VStack(spacing: 6) {
                 ForEach(model.affinity.prefix(12)) { a in

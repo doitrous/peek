@@ -64,11 +64,13 @@ private struct IntroView: View {
 
             VStack(alignment: .leading, spacing: 14) {
                 Text("Sticky apps").font(.title.bold())
-                Text("Peek can learn which apps you switch to most and float them to the top — so your go-to windows are always the first keystroke away. Pinned apps stay on top no matter what.")
+                Text("A learning layer for your switcher: the more you switch to an app, the higher Peek floats it — automatically. Your busiest apps drift to the top so they're always the first keystroke away.")
                     .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                Label("Watch the list on the left reorder as apps get used.", systemImage: "sparkles")
+                Label("Watch the list reorder as apps get used — the bars show how favored each one is.", systemImage: "sparkles")
                     .font(.callout).foregroundStyle(.secondary)
-                Label("It's off by default. You stay in classic ⌘-Tab order until you turn it on.", systemImage: "power")
+                Label("Pinning is always on. Sticky apps just adds the automatic favoring.", systemImage: "pin")
+                    .font(.callout).foregroundStyle(.secondary)
+                Label("Off by default — you stay in classic ⌘-Tab order until you turn it on.", systemImage: "power")
                     .font(.callout).foregroundStyle(.secondary)
 
                 Spacer()

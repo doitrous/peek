@@ -34,6 +34,29 @@ final class WindowRankerTests: XCTestCase {
         XCTAssertEqual(order, [0, 2, 1], "current stays first; Xcode outranks Mail")
     }
 
+    func testLearningOffKeepsZOrderButPinsStillFloat() {
+        let now = Date()
+        let items = [
+            WindowRanker.Item(app: "Terminal", originalIndex: 0),
+            WindowRanker.Item(app: "Mail", originalIndex: 1),
+            WindowRanker.Item(app: "Xcode", originalIndex: 2),   // most-used, but learning off
+        ]
+        let events = [
+            SwitchEvent(timestamp: minutesAgo(1, from: now), fromApp: nil, toApp: "Xcode"),
+            SwitchEvent(timestamp: minutesAgo(2, from: now), fromApp: nil, toApp: "Xcode"),
+        ]
+        // Learning off, no pins → pure z-order.
+        XCTAssertEqual(
+            WindowRanker.order(items: items, events: events, pinned: [], now: now, useAffinity: false),
+            [0, 1, 2]
+        )
+        // Learning off, but Xcode pinned → it floats above Mail regardless.
+        XCTAssertEqual(
+            WindowRanker.order(items: items, events: events, pinned: ["Xcode"], now: now, useAffinity: false),
+            [0, 2, 1]
+        )
+    }
+
     func testPinnedAppJumpsToFront() {
         let now = Date()
         let items = [

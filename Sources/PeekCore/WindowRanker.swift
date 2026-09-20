@@ -25,13 +25,15 @@ public struct WindowRanker {
         return scores
     }
 
-    /// Display order (as original indices). Pinned apps first in pin order, then the
-    /// rest by affinity desc, z-order as tiebreak. `keepFirst` keeps the frontmost
-    /// window at index 0 so a quick ⌘-Tab still flips to your top *other* window.
+    /// Display order (as original indices). Pinned apps first in pin order (ALWAYS,
+    /// independent of learning), then the rest. `useAffinity` turns on the learning
+    /// layer: non-pinned apps sort by affinity desc; otherwise they keep z-order.
+    /// `keepFirst` keeps the frontmost window at index 0 so a quick ⌘-Tab still flips
+    /// to your top *other* window.
     public static func order(items: [Item], events: [SwitchEvent], pinned: [String],
                              now: Date = Date(), halfLifeDays: Double = 7,
-                             keepFirst: Bool = true) -> [Int] {
-        let aff = affinity(events: events, now: now, halfLifeDays: halfLifeDays)
+                             useAffinity: Bool = true, keepFirst: Bool = true) -> [Int] {
+        let aff = useAffinity ? affinity(events: events, now: now, halfLifeDays: halfLifeDays) : [:]
         var pinRank: [String: Int] = [:]
         for (i, app) in pinned.enumerated() { pinRank[app] = i }
 

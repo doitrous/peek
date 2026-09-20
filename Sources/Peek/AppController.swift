@@ -48,20 +48,26 @@ final class AppController: NSObject, NSApplicationDelegate {
         if !panel.isShown {
             let listed = lister.listWindows()
             guard !listed.isEmpty else { return }
-            if settings.stickyApps {
-                // Reorder by learned affinity + pins (current window stays first).
-                let items = listed.enumerated().map {
-                    WindowRanker.Item(app: $0.element.appName, originalIndex: $0.offset)
-                }
-                let order = WindowRanker.order(items: items, events: stats.events, pinned: pins.pinned)
-                windows = order.map { listed[$0] }
-            } else {
-                windows = listed   // classic front-to-back order
+            // Pins always float; the learning layer (affinity) only when sticky is on.
+            let items = listed.enumerated().map {
+                WindowRanker.Item(app: $0.element.appName, originalIndex: $0.offset)
+            }
+            let order = WindowRanker.order(items: items, events: stats.events,
+                                           pinned: pins.pinned, useAffinity: settings.stickyApps)
+            windows = order.map { listed[$0] }
+
+            // Normalised affinity strength for the on-row meters (learning on only).
+            let aff = settings.stickyApps ? WindowRanker.affinity(events: stats.events) : [:]
+            let maxAff = max(aff.values.max() ?? 0, 0.0001)
+
+            let switcherItems = windows.map { w in
+                SwitcherItem(title: w.title, appName: w.appName, icon: w.appIcon,
+                             isPinned: pins.isPinned(w.appName),
+                             strength: min(1, (aff[w.appName] ?? 0) / maxAff))
             }
             // First press lands on the previous window (index 1), like ⌘-Tab.
             let start = backwards ? windows.count - 1 : min(1, windows.count - 1)
-            panel.show(items: windows.map { Self.item(from: $0, pinned: pins.isPinned($0.appName)) },
-                       selected: start, showPins: settings.stickyApps)
+            panel.show(items: switcherItems, selected: start, showStrength: settings.stickyApps)
         } else {
             panel.advance(backwards: backwards)
         }
@@ -88,17 +94,13 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     private func cancel() { panel.hide() }
 
-    // Pin/unpin from a switcher row without switching. Order re-applies next ⌘-Tab.
+    // Pin/unpin from a switcher row without switching. Pins float immediately next ⌘-Tab.
     private func togglePin(at index: Int) {
         guard windows.indices.contains(index) else { return }
         let app = windows[index].appName
         pins.toggle(app)
         panel.setItemPinned(app: app, pinned: pins.isPinned(app))
         dashboard?.refresh()
-    }
-
-    private static func item(from w: WindowInfo, pinned: Bool) -> SwitcherItem {
-        SwitcherItem(title: w.title, appName: w.appName, icon: w.appIcon, isPinned: pinned)
     }
 
     // MARK: Menu bar

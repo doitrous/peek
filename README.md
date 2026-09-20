@@ -7,14 +7,15 @@ that **learns which apps you actually use**.
 
 ## What makes it different
 
-- **Sticky apps (opt-in, off by default)** — apps are ranked by *recency-weighted
-  switch frequency* (7-day half-life), so your go-to apps float to the top. A
-  first-run window explains it with a live demo; enable it there or anytime from
-  the menu-bar icon. Until then, Peek behaves like a classic `⌘-Tab`. The current
-  window always stays at index 0, so a quick tap still flips to your last app.
-- **Pinning** — with sticky apps on, pin apps to sit first via the 📌 button on
-  each switcher row (or the dashboard's **"Your apps"** list, which shows each
-  app's affinity as a bar).
+- **Sticky apps (opt-in, off by default)** — a learning layer: apps are ranked by
+  *recency-weighted switch frequency* (7-day half-life), so the more you switch to
+  an app the higher Peek floats it. Each row shows an **affinity meter** (signal
+  bars) so you can see what it's learned. A first-run window explains it with a
+  live demo; enable it there or anytime from the menu-bar icon. Until then, Peek
+  is a classic `⌘-Tab`. The current window always stays at index 0.
+- **Pinning (always on)** — pin apps to sit first via the 📌 button on every
+  switcher row (or the dashboard's **"Your apps"** list). Pins float to the top
+  independently of the learning layer.
 - **RAM-lite** — only the *selected* window's thumbnail is ever captured, one at
   a time.
 

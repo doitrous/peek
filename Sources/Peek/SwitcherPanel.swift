@@ -7,13 +7,14 @@ struct SwitcherItem: Identifiable {
     let appName: String
     let icon: NSImage?
     var isPinned: Bool
+    var strength: Double = 0                  // 0...1 learned affinity (shown when learning is on)
 }
 
 final class SwitcherModel: ObservableObject {
     @Published var items: [SwitcherItem] = []
     @Published var selected: Int = 0
     @Published var preview: NSImage?          // only the selected window's thumbnail — RAM-lite
-    @Published var showPins = false           // pin buttons only when sticky apps is on
+    @Published var showStrength = false       // affinity meters (learning on)
     var onSelect: ((Int) -> Void)?            // hover moved the highlight
     var onChoose: (() -> Void)?               // a row was clicked
     var onTogglePin: ((Int) -> Void)?         // pin button on a row
@@ -60,11 +61,11 @@ final class SwitcherPanel {
         panel.contentView = NSHostingView(rootView: SwitcherRoot(model: model))
     }
 
-    func show(items: [SwitcherItem], selected: Int, showPins: Bool) {
+    func show(items: [SwitcherItem], selected: Int, showStrength: Bool) {
         model.items = items
         model.selected = max(0, min(selected, items.count - 1))
         model.preview = nil
-        model.showPins = showPins
+        model.showStrength = showStrength
         isShown = true
 
         let screen = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
@@ -166,20 +167,22 @@ private struct SwitcherColumn: View {
                 Text(item.appName).font(.system(size: 12)).foregroundStyle(.white.opacity(0.55))
             }
             Spacer(minLength: 0)
-            if model.showPins {
-                Button {
-                    model.onTogglePin?(index)
-                } label: {
-                    Image(systemName: item.isPinned ? "pin.fill" : "pin")
-                        .font(.system(size: 13))
-                        .rotationEffect(.degrees(45))
-                        .foregroundStyle(item.isPinned ? Color.accentColor : .white.opacity(0.4))
-                        .frame(width: 26, height: 26)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .help(item.isPinned ? "Unpin \(item.appName)" : "Pin \(item.appName)")
+            if model.showStrength && item.strength > 0.02 {
+                AffinityMeter(level: item.strength)
+                    .help("Peek favors this app based on how often you switch to it")
             }
+            Button {
+                model.onTogglePin?(index)
+            } label: {
+                Image(systemName: item.isPinned ? "pin.fill" : "pin")
+                    .font(.system(size: 13))
+                    .rotationEffect(.degrees(45))
+                    .foregroundStyle(item.isPinned ? Color.accentColor : .white.opacity(0.38))
+                    .frame(width: 26, height: 26)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(item.isPinned ? "Unpin \(item.appName)" : "Pin \(item.appName)")
         }
         .foregroundStyle(.white)
         .padding(.horizontal, 12).padding(.vertical, 9)
@@ -227,5 +230,24 @@ private struct SwitcherColumn: View {
 
     private var current: SwitcherItem? {
         model.items.indices.contains(model.selected) ? model.items[model.selected] : nil
+    }
+}
+
+/// Signal-strength style bars showing how strongly Peek has learned to favor an app.
+private struct AffinityMeter: View {
+    let level: Double            // 0...1
+    private let heights: [CGFloat] = [6, 9, 12, 15]
+
+    var body: some View {
+        let filled = max(1, Int((level * 4).rounded(.up)))
+        HStack(alignment: .bottom, spacing: 2) {
+            ForEach(0..<4, id: \.self) { i in
+                Capsule()
+                    .fill(i < filled ? Color.accentColor : Color.white.opacity(0.18))
+                    .frame(width: 3, height: heights[i])
+            }
+        }
+        .frame(height: 15)
+        .accessibilityLabel("Affinity \(Int((level * 100).rounded())) percent")
     }
 }
