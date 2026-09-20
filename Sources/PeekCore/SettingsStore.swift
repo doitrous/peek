@@ -31,12 +31,17 @@ public enum ActivationShortcut: String, Codable, CaseIterable {
 }
 
 public enum MenuBarIconStyle: String, Codable, CaseIterable {
-    case stack, cards, grid, arrows
+    case peek, stack, cards, grid, arrows
+    /// Picker/menu-bar SF Symbol. `.peek` renders the real app icon instead
+    /// (see AppController.applyMenuBarIcon); this is just its Picker glyph.
     public var symbol: String {
-        ["stack": "square.stack.3d.up.fill", "cards": "rectangle.stack.fill",
-         "grid": "squares.below.rectangle", "arrows": "arrow.left.arrow.right"][rawValue]!
+        ["peek": "square.stack.3d.up.fill", "stack": "square.stack.3d.up.fill",
+         "cards": "rectangle.stack.fill", "grid": "squares.below.rectangle",
+         "arrows": "arrow.left.arrow.right"][rawValue]!
     }
-    public var label: String { rawValue.capitalized }
+    /// True when this style shows Peek's full-color app mark (tint doesn't apply).
+    public var isAppMark: Bool { self == .peek }
+    public var label: String { self == .peek ? "Peek mark" : rawValue.capitalized }
 }
 
 public enum MenuBarIconTint: String, Codable, CaseIterable {
@@ -55,7 +60,7 @@ public final class SettingsStore: ObservableObject {
     // General
     @Published public var startAtLogin = false { didSet { persist() } }
     @Published public var showMenuBarIcon = true { didSet { persist() } }
-    @Published public var iconStyle: MenuBarIconStyle = .stack { didSet { persist() } }
+    @Published public var iconStyle: MenuBarIconStyle = .peek { didSet { persist() } }
     @Published public var iconTint: MenuBarIconTint = .monochrome { didSet { persist() } }
     @Published public var language: AppLanguage = .system { didSet { persist() } }
 
@@ -136,7 +141,7 @@ public final class SettingsStore: ObservableObject {
     private struct Payload: Codable {
         var startAtLogin = false
         var showMenuBarIcon = true
-        var iconStyle: MenuBarIconStyle = .stack
+        var iconStyle: MenuBarIconStyle = .peek
         var iconTint: MenuBarIconTint = .monochrome
         var language: AppLanguage = .system
         var theme: PeekTheme = .system
@@ -170,7 +175,7 @@ public final class SettingsStore: ObservableObject {
             func g<T: Decodable>(_ k: CodingKeys, _ d: T) -> T { (try? c.decode(T.self, forKey: k)) ?? d }
             startAtLogin = g(.startAtLogin, false)
             showMenuBarIcon = g(.showMenuBarIcon, true)
-            iconStyle = g(.iconStyle, .stack)
+            iconStyle = g(.iconStyle, .peek)
             iconTint = g(.iconTint, .monochrome)
             language = g(.language, .system)
             theme = g(.theme, .system)

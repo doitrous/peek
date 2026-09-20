@@ -291,11 +291,26 @@ final class AppController: NSObject, NSApplicationDelegate {
             statusItem?.menu = buildMenu()
         }
         if let button = statusItem?.button {
-            let image = NSImage(systemSymbolName: settings.iconStyle.symbol, accessibilityDescription: "Peek")
-            image?.isTemplate = settings.iconTint == .monochrome
-            button.image = image
-            button.contentTintColor = settings.iconTint == .accent ? .controlAccentColor : nil
+            if settings.iconStyle.isAppMark, let mark = menuBarAppMark() {
+                button.image = mark                       // full-color Peek mark
+                button.contentTintColor = nil
+            } else {
+                let image = NSImage(systemSymbolName: settings.iconStyle.symbol, accessibilityDescription: "Peek")
+                image?.isTemplate = settings.iconTint == .monochrome
+                button.image = image
+                button.contentTintColor = settings.iconTint == .accent ? .peekAccent : nil
+            }
         }
+    }
+
+    /// The app icon, scaled to fit the menu bar (kept in full color — it's the brand mark).
+    private func menuBarAppMark() -> NSImage? {
+        guard let src = NSApp.applicationIconImage ?? NSImage(named: "AppIcon") else { return nil }
+        let img = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { rect in
+            src.draw(in: rect); return true
+        }
+        img.isTemplate = false
+        return img
     }
 
     @objc private func toggleSticky() {

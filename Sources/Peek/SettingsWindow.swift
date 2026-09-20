@@ -52,8 +52,8 @@ private struct SettingsView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 10).padding(.vertical, 7)
                             .background(RoundedRectangle(cornerRadius: 7)
-                                .fill(section == s ? Color.accentColor.opacity(0.20) : .clear))
-                            .foregroundStyle(section == s ? Color.accentColor : .primary)
+                                .fill(section == s ? Color.peekAccent.opacity(0.20) : .clear))
+                            .foregroundStyle(section == s ? Color.peekAccent : .primary)
                     }
                     .buttonStyle(.plain)
                 }
@@ -101,7 +101,7 @@ private struct SettingsView: View {
                 Picker("Icon tint", selection: $settings.iconTint) {
                     ForEach(MenuBarIconTint.allCases, id: \.self) { Text($0.label).tag($0) }
                 }
-                .disabled(!settings.showMenuBarIcon)
+                .disabled(!settings.showMenuBarIcon || settings.iconStyle.isAppMark)
             }
             Section("Language") {
                 Picker("Language", selection: $settings.language) {
@@ -124,7 +124,7 @@ private struct SettingsView: View {
                         Label("Support Peek", systemImage: "heart.fill")
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(.pink)
+                    .tint(.peekAccent)
                 }
             }
         }
