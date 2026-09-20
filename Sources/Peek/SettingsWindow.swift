@@ -101,7 +101,7 @@ private struct SettingsView: View {
                 Picker("Icon tint", selection: $settings.iconTint) {
                     ForEach(MenuBarIconTint.allCases, id: \.self) { Text($0.label).tag($0) }
                 }
-                .disabled(!settings.showMenuBarIcon || settings.iconStyle.isAppMark)
+                .disabled(!settings.showMenuBarIcon)
             }
             Section("Language") {
                 Picker("Language", selection: $settings.language) {
