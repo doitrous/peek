@@ -291,25 +291,39 @@ final class AppController: NSObject, NSApplicationDelegate {
             statusItem?.menu = buildMenu()
         }
         if let button = statusItem?.button {
-            if settings.iconStyle.isAppMark, let mark = menuBarAppMark() {
-                button.image = mark                       // full-color Peek mark
-                button.contentTintColor = nil
-            } else {
-                let image = NSImage(systemSymbolName: settings.iconStyle.symbol, accessibilityDescription: "Peek")
-                image?.isTemplate = settings.iconTint == .monochrome
-                button.image = image
-                button.contentTintColor = settings.iconTint == .accent ? .peekAccent : nil
-            }
+            let image = settings.iconStyle.isAppMark
+                ? peekMarkGlyph()
+                : NSImage(systemSymbolName: settings.iconStyle.symbol, accessibilityDescription: "Peek")
+            image?.isTemplate = settings.iconTint == .monochrome
+            button.image = image
+            button.contentTintColor = settings.iconTint == .accent ? .peekAccent : nil
         }
     }
 
-    /// The app icon, scaled to fit the menu bar (kept in full color — it's the brand mark).
-    private func menuBarAppMark() -> NSImage? {
-        guard let src = NSApp.applicationIconImage ?? NSImage(named: "AppIcon") else { return nil }
-        let img = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { rect in
-            src.draw(in: rect); return true
+    /// A flat monochrome version of the Peek mark (three fanned "window" cards)
+    /// for the menu bar — a template image, so it renders white/black to match
+    /// the bar rather than showing the full-color logo.
+    private func peekMarkGlyph() -> NSImage {
+        let img = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { _ in
+            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
+            let w: CGFloat = 9, h: CGFloat = 7, r: CGFloat = 1.7
+            let dx: CGFloat = 2.0, dy: CGFloat = 1.9, gap: CGFloat = 0.9
+            let fx: CGFloat = 6.3, fy: CGFloat = 3.4          // front card, lower-right
+            func card(_ i: CGFloat, inflate: CGFloat = 0) -> CGPath {
+                CGPath(roundedRect: CGRect(x: fx - i*dx - inflate, y: fy + i*dy - inflate,
+                                           width: w + 2*inflate, height: h + 2*inflate),
+                       cornerWidth: r + inflate, cornerHeight: r + inflate, transform: nil)
+            }
+            ctx.setFillColor(NSColor.black.cgColor)
+            for i in stride(from: CGFloat(2), through: 0, by: -1) {  // back → front
+                if i < 2 {                                            // punch a thin gap over the card behind
+                    ctx.setBlendMode(.clear); ctx.addPath(card(i, inflate: gap)); ctx.fillPath()
+                }
+                ctx.setBlendMode(.normal); ctx.addPath(card(i)); ctx.fillPath()
+            }
+            return true
         }
-        img.isTemplate = false
+        img.isTemplate = true
         return img
     }
 

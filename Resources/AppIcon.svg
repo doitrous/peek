@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="Peek app icon in shaded rose pink">
+  <defs>
+    <path id="shape" d="M300 88H724C841 88 936 183 936 300V724C936 841 841 936 724 936H300C183 936 88 841 88 724V300C88 183 183 88 300 88Z"/>
+    <clipPath id="clip"><use href="#shape"/></clipPath>
+
+    <linearGradient id="rose" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eb86a1"/>
+      <stop offset="42%" stop-color="#df5d81"/>
+      <stop offset="100%" stop-color="#ac2455"/>
+    </linearGradient>
+    <radialGradient id="upper-light" cx="23%" cy="12%" r="83%">
+      <stop offset="0%" stop-color="#fff0f3" stop-opacity="0.22"/>
+      <stop offset="68%" stop-color="#fff0f3" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="lower-shade" cx="86%" cy="88%" r="75%">
+      <stop offset="0%" stop-color="#76113c" stop-opacity="0.24"/>
+      <stop offset="85%" stop-color="#76113c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rear-card" x1="0%" y1="0%" x2="22%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e8ebf6"/>
+    </linearGradient>
+    <linearGradient id="middle-card" x1="0%" y1="0%" x2="18%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f0f1fa"/>
+    </linearGradient>
+    <linearGradient id="front-card" x1="0%" y1="0%" x2="10%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="70%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f6f7ff"/>
+    </linearGradient>
+
+    <filter id="blur" x="-35%" y="-35%" width="180%" height="190%">
+      <feGaussianBlur stdDeviation="15"/>
+    </filter>
+    <filter id="glow" x="-35%" y="-35%" width="180%" height="190%">
+      <feGaussianBlur stdDeviation="23"/>
+    </filter>
+  </defs>
+
+  <g clip-path="url(#clip)">
+    <use href="#shape" fill="url(#rose)"/>
+    <use href="#shape" fill="url(#upper-light)"/>
+    <use href="#shape" fill="url(#lower-shade)"/>
+
+    <g transform="rotate(-14 420 450)">
+      <rect x="255" y="312" width="350" height="316" rx="39" fill="#761738" opacity="0.34" filter="url(#blur)"/>
+      <rect x="245" y="292" width="350" height="316" rx="39" fill="url(#rear-card)"/>
+    </g>
+
+    <g transform="rotate(-8 523 500)">
+      <rect x="342" y="358" width="385" height="325" rx="40" fill="#731338" opacity="0.38" filter="url(#blur)"/>
+      <rect x="330" y="338" width="385" height="325" rx="40" fill="url(#middle-card)"/>
+    </g>
+
+    <g transform="rotate(-6 613 565)">
+      <rect x="425" y="406" width="375" height="315" rx="42" fill="#fff" opacity="0.6" filter="url(#glow)"/>
+      <rect x="438" y="429" width="375" height="315" rx="42" fill="#751239" opacity="0.33" filter="url(#blur)"/>
+      <rect x="425" y="406" width="375" height="315" rx="42" fill="url(#front-card)"/>
+    </g>
+  </g>
+</svg>
