@@ -5,31 +5,76 @@ import PeekCore
 final class SettingsWindowController: NSWindowController {
     init(settings: SettingsStore) {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 540, height: 460),
+            contentRect: NSRect(x: 0, y: 0, width: 640, height: 480),
             styleMask: [.titled, .closable], backing: .buffered, defer: false
         )
         window.title = "Peek Settings"
         window.isReleasedWhenClosed = false
         super.init(window: window)
         window.contentViewController = NSHostingController(rootView: SettingsView(settings: settings))
-        window.setContentSize(NSSize(width: 540, height: 460))
+        window.setContentSize(NSSize(width: 640, height: 480))
         window.center()
     }
     required init?(coder: NSCoder) { fatalError("not supported") }
 }
 
+private enum SettingsSection: String, CaseIterable, Identifiable {
+    case general, appearance, behavior, shortcuts, apps
+    var id: String { rawValue }
+    var title: String { rawValue.capitalized }
+    var symbol: String {
+        switch self {
+        case .general: return "gearshape"
+        case .appearance: return "paintbrush"
+        case .behavior: return "slider.horizontal.3"
+        case .shortcuts: return "command"
+        case .apps: return "app.badge"
+        }
+    }
+}
+
 private struct SettingsView: View {
     @ObservedObject var settings: SettingsStore
+    @State private var section: SettingsSection = .general
 
     var body: some View {
-        TabView {
-            general.tabItem { Label("General", systemImage: "gearshape") }
-            appearance.tabItem { Label("Appearance", systemImage: "paintbrush") }
-            behavior.tabItem { Label("Behavior", systemImage: "slider.horizontal.3") }
-            shortcuts.tabItem { Label("Shortcuts", systemImage: "command") }
-            apps.tabItem { Label("Apps", systemImage: "app.badge") }
+        HStack(spacing: 0) {
+            // Sidebar — always-visible list of sections (no hidden dropdown).
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(SettingsSection.allCases) { s in
+                    Button { section = s } label: {
+                        Label(s.title, systemImage: s.symbol)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 10).padding(.vertical, 7)
+                            .background(RoundedRectangle(cornerRadius: 7)
+                                .fill(section == s ? Color.accentColor.opacity(0.20) : .clear))
+                            .foregroundStyle(section == s ? Color.accentColor : .primary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                Spacer()
+            }
+            .padding(10)
+            .frame(width: 170)
+            .background(Color(nsColor: .windowBackgroundColor))
+
+            Divider()
+
+            ScrollView { detail.padding(.vertical, 4) }
+                .frame(maxWidth: .infinity)
+                .background(Color(nsColor: .underPageBackgroundColor))
         }
-        .frame(width: 540, height: 460)
+        .frame(width: 640, height: 480)
+    }
+
+    @ViewBuilder private var detail: some View {
+        switch section {
+        case .general: general
+        case .appearance: appearance
+        case .behavior: behavior
+        case .shortcuts: shortcuts
+        case .apps: apps
+        }
     }
 
     // MARK: General

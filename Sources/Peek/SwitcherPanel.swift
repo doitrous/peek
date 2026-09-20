@@ -75,7 +75,7 @@ final class SwitcherPanel {
 
     func show(items: [SwitcherItem], selected: Int, showStrength: Bool,
               showPreview: Bool, animate: Bool, fade: Bool,
-              onScreen: NSScreen?, allSpaces: Bool) {
+              onScreen: NSScreen?, allSpaces: Bool, appearance: NSAppearance?) {
         model.items = items
         model.selected = max(0, min(selected, items.count - 1))
         model.preview = nil
@@ -85,6 +85,7 @@ final class SwitcherPanel {
         model.animate = animate
         isShown = true
         fadeOnHide = fade
+        panel.appearance = appearance          // nil = follow system; drives light/dark colors
 
         panel.collectionBehavior = allSpaces
             ? [.canJoinAllSpaces, .fullScreenAuxiliary]
@@ -175,8 +176,8 @@ private struct SwitcherColumn: View {
             statsFooter
         }
         .padding(16)
-        .background(.black.opacity(0.82), in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.white.opacity(0.12), lineWidth: 0.5))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.primary.opacity(0.12), lineWidth: 0.5))
         .offset(x: appeared ? 0 : -32)
         .opacity(appeared ? 1 : 0)
         .onAppear {
@@ -192,7 +193,7 @@ private struct SwitcherColumn: View {
 
     private var preview: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 14).fill(.black.opacity(0.5))
+            RoundedRectangle(cornerRadius: 14).fill(.primary.opacity(0.06))
             if let img = model.preview {
                 Image(nsImage: img).resizable().aspectRatio(contentMode: .fit).padding(8)
             } else if let icon = current?.icon {
@@ -201,11 +202,11 @@ private struct SwitcherColumn: View {
             VStack(alignment: .leading, spacing: 2) {
                 Spacer()
                 Text(current?.title ?? "").font(.system(size: 15, weight: .medium)).lineLimit(1)
-                Text(current?.appName ?? "").font(.system(size: 12)).foregroundStyle(.white.opacity(0.65))
+                Text(current?.appName ?? "").font(.system(size: 12)).foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(12)
-            .foregroundStyle(.white)
+            .foregroundStyle(.primary)
         }
         .frame(height: 220)
         .clipShape(RoundedRectangle(cornerRadius: 14))
@@ -217,12 +218,12 @@ private struct SwitcherColumn: View {
                 if let icon = item.icon {
                     Image(nsImage: icon).resizable().frame(width: 30, height: 30)
                 } else {
-                    RoundedRectangle(cornerRadius: 7).fill(.white.opacity(0.2)).frame(width: 30, height: 30)
+                    RoundedRectangle(cornerRadius: 7).fill(.secondary.opacity(0.25)).frame(width: 30, height: 30)
                 }
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.title).font(.system(size: 15)).lineLimit(1)
-                Text(item.appName).font(.system(size: 12)).foregroundStyle(.white.opacity(0.55)).lineLimit(1)
+                Text(item.appName).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(1)
                 if let u = model.usage[item.pid] {
                     HStack(spacing: 8) {
                         usageChip("cpu", "CPU", "\(Int(u.cpuPercent.rounded()))%")
@@ -253,14 +254,14 @@ private struct SwitcherColumn: View {
                 Image(systemName: item.isPinned ? "pin.fill" : "pin")
                     .font(.system(size: 13))
                     .rotationEffect(.degrees(45))
-                    .foregroundStyle(item.isPinned ? Color.accentColor : .white.opacity(0.38))
+                    .foregroundStyle(item.isPinned ? Color.accentColor : .secondary)
                     .frame(width: 26, height: 26)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .help(item.isPinned ? "Unpin \(item.appName)" : "Pin \(item.appName)")
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(.primary)
         .padding(.horizontal, 12).padding(.vertical, 9)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
@@ -291,15 +292,15 @@ private struct SwitcherColumn: View {
             hint("⌘Tab", "cycle"); hint("hover / click", "pick"); hint("esc", "cancel")
         }
         .font(.system(size: 12))
-        .foregroundStyle(.white.opacity(0.6))
+        .foregroundStyle(.secondary)
         .padding(.top, 6)
         .frame(maxWidth: .infinity)
-        .overlay(Divider().overlay(.white.opacity(0.12)), alignment: .top)
+        .overlay(Divider().overlay(.primary.opacity(0.12)), alignment: .top)
     }
 
     private func hint(_ key: String, _ label: String) -> some View {
         HStack(spacing: 5) {
-            Text(key).foregroundStyle(.white.opacity(0.9))
+            Text(key).foregroundStyle(.primary)
             Text(label)
         }
     }
@@ -310,7 +311,7 @@ private struct SwitcherColumn: View {
         if let s = model.system {
             HStack(spacing: 12) {
                 Text("SYSTEM").font(.system(size: 9, weight: .semibold)).tracking(1)
-                    .foregroundStyle(.white.opacity(0.45))
+                    .foregroundStyle(.secondary)
                 stat("cpu", "CPU", String(format: "%.0f%%", s.cpuPercent))
                 stat("memorychip", "RAM", String(format: "%.1f/%.0f GB", s.memUsedGB, s.memTotalGB))
                 if let b = s.batteryPercent {
@@ -318,10 +319,10 @@ private struct SwitcherColumn: View {
                 }
             }
             .font(.system(size: 11))
-            .foregroundStyle(.white.opacity(0.75))
+            .foregroundStyle(.secondary)
             .padding(.horizontal, 12).padding(.vertical, 6)
             .frame(maxWidth: .infinity)
-            .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
+            .background(.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
         }
     }
 
@@ -329,7 +330,7 @@ private struct SwitcherColumn: View {
         HStack(spacing: 4) {
             Image(systemName: symbol).font(.system(size: 11))
             Text(label).font(.system(size: 9, weight: .semibold)).tracking(0.5)
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(.secondary)
             Text(value).monospacedDigit()
         }
     }
@@ -339,12 +340,12 @@ private struct SwitcherColumn: View {
         HStack(spacing: 4) {
             Image(systemName: symbol).font(.system(size: 9))
             Text(label).font(.system(size: 9, weight: .semibold)).tracking(0.5)
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(.secondary)
             Text(value).font(.system(size: 11, weight: .medium)).monospacedDigit()
         }
-        .foregroundStyle(.white.opacity(0.85))
+        .foregroundStyle(.primary.opacity(0.85))
         .padding(.horizontal, 7).padding(.vertical, 2)
-        .background(.white.opacity(0.10), in: Capsule())
+        .background(.primary.opacity(0.08), in: Capsule())
     }
 
     private func batterySymbol(_ p: Int) -> String {
@@ -376,7 +377,7 @@ private struct AffinityMeter: View {
         HStack(alignment: .bottom, spacing: 2) {
             ForEach(0..<4, id: \.self) { i in
                 Capsule()
-                    .fill(i < filled ? Color.accentColor : Color.white.opacity(0.18))
+                    .fill(i < filled ? Color.accentColor : Color.secondary.opacity(0.25))
                     .frame(width: 3, height: heights[i])
             }
         }
