@@ -305,17 +305,14 @@ private struct SwitcherColumn: View {
         }
     }
 
-    // Whole-machine stats, clearly labelled and on their own padded bar so it's
-    // obvious this row is the SYSTEM total (vs. the per-app chips on each tile).
+    // Whole-machine stats on their own padded bar (vs. the per-app chips on each tile).
     @ViewBuilder private var statsFooter: some View {
         if let s = model.system {
             HStack(spacing: 12) {
-                Text("SYSTEM").font(.system(size: 9, weight: .semibold)).tracking(1)
-                    .foregroundStyle(.secondary)
                 stat("cpu", "CPU", String(format: "%.0f%%", s.cpuPercent))
                 stat("memorychip", "RAM", String(format: "%.1f/%.0f GB", s.memUsedGB, s.memTotalGB))
                 if let b = s.batteryPercent {
-                    stat(batterySymbol(b), "BATT", "\(b)%")
+                    stat(batterySymbol(b), "", "\(b)%")   // battery icon is self-evident
                 }
             }
             .font(.system(size: 11))
@@ -329,8 +326,10 @@ private struct SwitcherColumn: View {
     private func stat(_ symbol: String, _ label: String, _ value: String) -> some View {
         HStack(spacing: 4) {
             Image(systemName: symbol).font(.system(size: 11))
-            Text(label).font(.system(size: 9, weight: .semibold)).tracking(0.5)
-                .foregroundStyle(.secondary)
+            if !label.isEmpty {
+                Text(label).font(.system(size: 9, weight: .semibold)).tracking(0.5)
+                    .foregroundStyle(.secondary)
+            }
             Text(value).monospacedDigit()
         }
     }
