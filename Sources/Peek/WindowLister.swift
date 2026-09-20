@@ -59,22 +59,32 @@ final class WindowLister {
     // Uses ScreenCaptureKit (the supported replacement for the deprecated
     // CGWindowListCreateImage); needs Screen Recording permission, same as listing.
     static func capture(_ windowID: CGWindowID) async -> NSImage? {
+        guard windowID != 0 else { return nil }      // windowless tiles have no window to shoot
         do {
+            // onScreenWindowsOnly:false — the list spans every Space, so the selected
+            // window is usually NOT on the current Space; restricting to on-screen
+            // windows made capture miss them and fall back to the app icon.
             let content = try await SCShareableContent.excludingDesktopWindows(
-                false, onScreenWindowsOnly: true)
+                false, onScreenWindowsOnly: false)
             guard let win = content.windows.first(where: { $0.windowID == windowID }),
                   win.frame.width > 1, win.frame.height > 1 else { return nil }
 
+            // Shoot at the display's backing scale so the thumbnail is retina-crisp,
+            // not a soft point-resolution image blown up to fill the preview.
+            let scale = NSScreen.main?.backingScaleFactor ?? 2
             let cfg = SCStreamConfiguration()
-            cfg.width = Int(win.frame.width)         // nominal (point) resolution, like before
-            cfg.height = Int(win.frame.height)
+            cfg.width = Int(win.frame.width * scale)
+            cfg.height = Int(win.frame.height * scale)
             cfg.showsCursor = false
             cfg.ignoreShadowsSingleWindow = true
 
             let filter = SCContentFilter(desktopIndependentWindow: win)
             let cg = try await SCScreenshotManager.captureImage(
                 contentFilter: filter, configuration: cfg)
-            return NSImage(cgImage: cg, size: NSSize(width: cg.width, height: cg.height))
+            // Point-sized NSImage (pixels / scale) so SwiftUI lays it out at the
+            // right aspect and size while keeping the extra pixel density.
+            return NSImage(cgImage: cg, size: NSSize(width: CGFloat(cg.width) / scale,
+                                                     height: CGFloat(cg.height) / scale))
         } catch {
             return nil
         }

@@ -263,9 +263,11 @@ private struct SwitcherColumn: View {
         ZStack {
             RoundedRectangle(cornerRadius: 14).fill(.primary.opacity(0.06))
             if let img = model.preview {
-                Image(nsImage: img).resizable().aspectRatio(contentMode: .fit).padding(8)
+                Image(nsImage: img).resizable().aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(4)
             } else if let icon = current?.icon {
-                Image(nsImage: icon).resizable().aspectRatio(contentMode: .fit).frame(width: 72, height: 72)
+                Image(nsImage: icon).resizable().aspectRatio(contentMode: .fit).frame(width: 112, height: 112)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Spacer()
