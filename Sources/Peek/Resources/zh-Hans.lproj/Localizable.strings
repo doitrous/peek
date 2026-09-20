@@ -129,3 +129,21 @@
 "%@: live CPU and memory usage" = "%@：实时 CPU 与内存占用";
 "Peek favors this app based on how often you switch to it" = "Peek 会根据你切换到该应用的频率来优先显示它";
 "Quit %@ — hold ⌥ to force quit" = "退出 %@——按住 ⌥ 可强制退出";
+
+/* More shortcuts + controls (batch 3) */
+"Left edge" = "左边缘";
+"Centered" = "居中";
+"Show CPU & memory on each app" = "在每个应用上显示 CPU 与内存";
+"Show the system stats footer" = "显示系统状态栏";
+"Cycling wraps around the list" = "循环切换在列表末尾回到开头";
+"Layout" = "布局";
+"Switcher position" = "切换器位置";
+"Maximum rows" = "最大行数";
+"Extra windows beyond this scroll within the switcher." = "超出此数量的窗口将在切换器内滚动显示。";
+"Extra keys" = "额外按键";
+"Number keys 1–9 jump to that window" = "数字键 1–9 直接跳到对应窗口";
+"P pins, Q or W quits the highlighted app" = "P 固定；Q 或 W 退出高亮的应用";
+"Jump to that window" = "跳到该窗口";
+"First / last window" = "第一个 / 最后一个窗口";
+"Pin or unpin the highlighted app" = "固定或取消固定高亮的应用";
+"Quit the highlighted app (⌥ to force)" = "退出高亮的应用（⌥ 强制退出）";

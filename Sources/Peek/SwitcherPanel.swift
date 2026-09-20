@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import PeekCore
 
 struct SwitcherItem: Identifiable {
     let id = UUID()
@@ -17,6 +18,8 @@ final class SwitcherModel: ObservableObject {
     @Published var preview: NSImage?          // only the selected window's thumbnail — RAM-lite
     @Published var showStrength = false       // affinity meters (learning on)
     @Published var showPreview = true         // big window preview at the top
+    @Published var showUsage = true           // per-app CPU/RAM chips on each row
+    @Published var showFooter = true          // system CPU/RAM/battery footer bar
     @Published var animate = true             // entrance animation
     @Published var system: SystemSnapshot?    // live CPU / RAM / battery footer
     @Published var usage: [pid_t: AppUsage] = [:]   // live per-app CPU / RAM
@@ -56,6 +59,7 @@ final class SwitcherPanel {
     private let previewHeight: CGFloat = 220
     private let nonPreviewChrome: CGFloat = 28 + 36 + 40   // hints + system bar + padding
     private var fadeOnHide = false
+    private var wrapCycle = true
 
     init() {
         panel = NSPanel(
@@ -74,7 +78,8 @@ final class SwitcherPanel {
     }
 
     func show(items: [SwitcherItem], selected: Int, showStrength: Bool,
-              showPreview: Bool, animate: Bool, fade: Bool,
+              showPreview: Bool, showUsage: Bool, showFooter: Bool, wrap: Bool,
+              maxRows: Int, position: SwitcherPosition, animate: Bool, fade: Bool,
               onScreen: NSScreen?, allSpaces: Bool, appearance: NSAppearance?) {
         model.items = items
         model.selected = max(0, min(selected, items.count - 1))
@@ -82,7 +87,10 @@ final class SwitcherPanel {
         model.usage = [:]
         model.showStrength = showStrength
         model.showPreview = showPreview
+        model.showUsage = showUsage
+        model.showFooter = showFooter
         model.animate = animate
+        wrapCycle = wrap
         isShown = true
         fadeOnHide = fade
         panel.appearance = appearance          // nil = follow system; drives light/dark colors
@@ -93,11 +101,15 @@ final class SwitcherPanel {
 
         let screen = (onScreen ?? NSScreen.main ?? NSScreen.screens.first)?.frame
             ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
-        let base = nonPreviewChrome + (showPreview ? previewHeight + 12 : 0)
-        let wanted = base + CGFloat(items.count) * rowHeight
+        let footerChrome = showFooter ? nonPreviewChrome : nonPreviewChrome - 36
+        let base = footerChrome + (showPreview ? previewHeight + 12 : 0)
+        // Cap the visible rows (1...20); extra rows scroll.
+        let rowsShown = min(items.count, max(1, min(maxRows, 20)))
+        let wanted = base + CGFloat(rowsShown) * rowHeight
         let height = min(wanted, screen.height - 80)
         panel.setContentSize(NSSize(width: width, height: height))
-        panel.setFrameOrigin(NSPoint(x: screen.minX + 20, y: screen.midY - height / 2))
+        let x = position == .center ? screen.midX - width / 2 : screen.minX + 20
+        panel.setFrameOrigin(NSPoint(x: x, y: screen.midY - height / 2))
 
         panel.alphaValue = fade ? 0 : 1
         panel.orderFrontRegardless()
@@ -112,7 +124,14 @@ final class SwitcherPanel {
     func advance(backwards: Bool) {
         let n = model.items.count
         guard n > 0 else { return }
-        model.selected = ((model.selected + (backwards ? -1 : 1)) % n + n) % n
+        let next = model.selected + (backwards ? -1 : 1)
+        model.selected = wrapCycle ? ((next % n) + n) % n : max(0, min(next, n - 1))
+    }
+
+    /// Jump the highlight straight to a specific row (number keys / Home / End).
+    func select(_ i: Int) {
+        guard !model.items.isEmpty else { return }
+        model.selected = max(0, min(i, model.items.count - 1))
     }
 
     func setPreview(_ image: NSImage?) { model.preview = image }
@@ -224,7 +243,7 @@ private struct SwitcherColumn: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.title).font(.system(size: 15)).lineLimit(1)
                 Text(item.appName).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(1)
-                if let u = model.usage[item.pid] {
+                if model.showUsage, let u = model.usage[item.pid] {
                     HStack(spacing: 8) {
                         usageChip("cpu", "CPU", "\(Int(u.cpuPercent.rounded()))%")
                         usageChip("memorychip", "RAM", memText(u.memMB))
@@ -308,7 +327,7 @@ private struct SwitcherColumn: View {
 
     // Whole-machine stats on their own padded bar (vs. the per-app chips on each tile).
     @ViewBuilder private var statsFooter: some View {
-        if let s = model.system {
+        if model.showFooter, let s = model.system {
             HStack(spacing: 12) {
                 stat("cpu", "CPU", String(format: "%.0f%%", s.cpuPercent))
                 stat("memorychip", "RAM", String(format: "%.1f/%.0f GB", s.memUsedGB, s.memTotalGB))

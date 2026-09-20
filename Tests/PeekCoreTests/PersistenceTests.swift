@@ -20,6 +20,11 @@ final class PersistenceTests: XCTestCase {
         a.language = .system
         a.hiddenApps = ["Finder", "Notes"]
         a.stickyApps = true
+        a.position = .center
+        a.maxVisibleRows = 12
+        a.numberKeyJump = false
+        a.showUsageChips = false
+        a.wrapCycle = false
 
         let b = SettingsStore(url: url)   // reload from disk
         XCTAssertEqual(b.theme, .dark)
@@ -27,6 +32,11 @@ final class PersistenceTests: XCTestCase {
         XCTAssertEqual(b.appearDelayMs, 150)
         XCTAssertEqual(b.hiddenApps, ["Finder", "Notes"])
         XCTAssertTrue(b.stickyApps)
+        XCTAssertEqual(b.position, .center)
+        XCTAssertEqual(b.maxVisibleRows, 12)
+        XCTAssertFalse(b.numberKeyJump)
+        XCTAssertFalse(b.showUsageChips)
+        XCTAssertFalse(b.wrapCycle)
     }
 
     func testSettingsDefaultsForMissingKeys() {

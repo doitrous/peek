@@ -51,7 +51,11 @@ final class AppController: NSObject, NSApplicationDelegate {
         hotKey = HotKey(
             onCycle: { [weak self] backwards in self?.cycle(backwards: backwards) },
             onCommit: { [weak self] in self?.commit() },
-            onCancel: { [weak self] in self?.cancel() }
+            onCancel: { [weak self] in self?.cancel() },
+            onJump: { [weak self] idx in self?.jump(to: idx) },
+            onEnd: { [weak self] last in self?.jumpToEnd(last: last) },
+            onPinSelected: { [weak self] in self?.pinSelected() },
+            onQuitSelected: { [weak self] force in self?.quitSelected(force: force) }
         )
         settings.onChange = { [weak self] in self?.applyLiveSettings() }
         applyLiveSettings()                        // theme, login item, menu-bar icon, hotkey config
@@ -102,6 +106,11 @@ final class AppController: NSObject, NSApplicationDelegate {
             self.panel.show(items: switcherItems, selected: self.pendingSelection,
                             showStrength: self.settings.stickyApps,
                             showPreview: self.settings.showPreview,
+                            showUsage: self.settings.showUsageChips,
+                            showFooter: self.settings.showSystemFooter,
+                            wrap: self.settings.wrapCycle,
+                            maxRows: self.settings.maxVisibleRows,
+                            position: self.settings.position,
                             animate: self.settings.animationsEnabled,
                             fade: self.settings.animationsEnabled && self.settings.fadeInOut,
                             onScreen: self.targetScreen(),
@@ -165,6 +174,30 @@ final class AppController: NSObject, NSApplicationDelegate {
         panel.hide()
     }
 
+    // Number key 1-9 → switch straight to that row.
+    private func jump(to index: Int) {
+        guard panel.isShown, windows.indices.contains(index) else { return }
+        panel.select(index)
+        commit()
+    }
+
+    // Home/End → first/last row (keeps the switcher open).
+    private func jumpToEnd(last: Bool) {
+        guard panel.isShown, panel.itemCount > 0 else { return }
+        panel.select(last ? panel.itemCount - 1 : 0)
+        updatePreview()
+    }
+
+    private func pinSelected() {
+        guard panel.isShown else { return }
+        togglePin(at: panel.selectedIndex)
+    }
+
+    private func quitSelected(force: Bool) {
+        guard panel.isShown else { return }
+        quitApp(at: panel.selectedIndex, force: force)
+    }
+
     // Live per-app CPU/RAM — only the visible pids, only while shown, on a serial queue.
     private func startUsageSampling() {
         let pids = Set(windows.map(\.pid))
@@ -220,6 +253,8 @@ final class AppController: NSObject, NSApplicationDelegate {
         statusItem?.menu = buildMenu()          // refresh menu titles in the chosen language
         hotKey?.modifier = modifierFlag(settings.activation)
         hotKey?.arrowKeysEnabled = settings.arrowKeys
+        hotKey?.numberJumpEnabled = settings.numberKeyJump
+        hotKey?.rowActionKeysEnabled = settings.rowActionKeys
         stickyItem?.state = settings.stickyApps ? .on : .off
     }
 

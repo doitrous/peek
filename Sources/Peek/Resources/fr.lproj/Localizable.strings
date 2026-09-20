@@ -129,3 +129,21 @@
 "%@: live CPU and memory usage" = "%@ : utilisation CPU et mémoire en direct";
 "Peek favors this app based on how often you switch to it" = "Peek favorise cette app selon la fréquence à laquelle vous y basculez";
 "Quit %@ — hold ⌥ to force quit" = "Quitter %@ — maintenez ⌥ pour forcer à quitter";
+
+/* More shortcuts + controls (batch 3) */
+"Left edge" = "Bord gauche";
+"Centered" = "Centré";
+"Show CPU & memory on each app" = "Afficher le CPU et la mémoire sur chaque app";
+"Show the system stats footer" = "Afficher la barre de statistiques système";
+"Cycling wraps around the list" = "Le défilement boucle en fin de liste";
+"Layout" = "Disposition";
+"Switcher position" = "Position du sélecteur";
+"Maximum rows" = "Lignes maximum";
+"Extra windows beyond this scroll within the switcher." = "Les fenêtres au-delà de ce nombre défilent dans le sélecteur.";
+"Extra keys" = "Touches supplémentaires";
+"Number keys 1–9 jump to that window" = "Les touches 1–9 sautent à cette fenêtre";
+"P pins, Q or W quits the highlighted app" = "P épingle ; Q ou W quitte l’app sélectionnée";
+"Jump to that window" = "Aller à cette fenêtre";
+"First / last window" = "Première / dernière fenêtre";
+"Pin or unpin the highlighted app" = "Épingler ou désépingler l’app sélectionnée";
+"Quit the highlighted app (⌥ to force)" = "Quitter l’app sélectionnée (⌥ pour forcer)";
