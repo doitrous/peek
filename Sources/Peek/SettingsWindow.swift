@@ -4,6 +4,8 @@ import PeekCore
 
 /// Where the "Support Peek" buttons (menu bar + Settings) send people.
 let peekDonateURL = URL(string: "https://paypal.me/Omary98")!
+/// The project's GitHub repo (Contribute button).
+let peekRepoURL = URL(string: "https://github.com/doitrous/peek")!
 
 final class SettingsWindowController: NSWindowController {
     init(settings: SettingsStore) {
@@ -15,9 +17,8 @@ final class SettingsWindowController: NSWindowController {
         window.isReleasedWhenClosed = false
         super.init(window: window)
         let host = NSHostingController(rootView: SettingsView(settings: settings))
-        host.sizingOptions = []          // let the window drive size; SwiftUI fills it
+        host.sizingOptions = [.preferredContentSize]
         window.contentViewController = host
-        window.setContentSize(NSSize(width: 640, height: 480))
         window.center()
     }
     required init?(coder: NSCoder) { fatalError("not supported") }
@@ -40,41 +41,27 @@ private enum SettingsSection: String, CaseIterable, Identifiable {
 
 private struct SettingsView: View {
     @ObservedObject var settings: SettingsStore
-    @State private var section: SettingsSection = .general
+    @State private var section: SettingsSection? = .general
 
     var body: some View {
-        HStack(spacing: 0) {
-            // Sidebar — always-visible list of sections (no hidden dropdown).
-            VStack(alignment: .leading, spacing: 2) {
-                ForEach(SettingsSection.allCases) { s in
-                    Button { section = s } label: {
-                        Label(s.title, systemImage: s.symbol)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 10).padding(.vertical, 7)
-                            .background(RoundedRectangle(cornerRadius: 7)
-                                .fill(section == s ? Color.peekAccent.opacity(0.20) : .clear))
-                            .foregroundStyle(section == s ? Color.peekAccent : .primary)
-                    }
-                    .buttonStyle(.plain)
-                }
-                Spacer()
+        // NavigationSplitView gives a native sidebar (correct material + title-bar
+        // blending), so there's no manual background/title-bar band to fight.
+        NavigationSplitView {
+            List(SettingsSection.allCases, selection: $section) { s in
+                Label(s.title, systemImage: s.symbol).tag(s)
             }
-            .padding(10)
-            .frame(width: 170)
-            .frame(maxHeight: .infinity)
-            .background(Color(nsColor: .windowBackgroundColor))
-
-            Divider()
-
-            ScrollView { detail.padding(.vertical, 4) }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color(nsColor: .underPageBackgroundColor))
+            .navigationSplitViewColumnWidth(188)
+            .toolbar(removing: .sidebarToggle)   // no collapse button — sidebar is always shown
+        } detail: {
+            ScrollView(.vertical, showsIndicators: false) { detail.padding(.vertical, 4) }
         }
-        .frame(minWidth: 640, maxWidth: .infinity, minHeight: 480, maxHeight: .infinity)
+        .navigationSplitViewStyle(.balanced)
+        .tint(.peekAccent)                       // crimson selection highlight
+        .frame(width: 640, height: 480)
     }
 
     @ViewBuilder private var detail: some View {
-        switch section {
+        switch section ?? .general {
         case .general: general
         case .appearance: appearance
         case .behavior: behavior
@@ -122,10 +109,33 @@ private struct SettingsView: View {
                         NSWorkspace.shared.open(peekDonateURL)
                     } label: {
                         Label("Support Peek", systemImage: "heart.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 14).padding(.vertical, 8)
+                            .background(Color.peekAccent, in: Capsule())
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.peekAccent)
+                    .buttonStyle(.plain)
                 }
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Contribute to the project")
+                        Text("Peek is open source — issues and PRs welcome.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button {
+                        NSWorkspace.shared.open(peekRepoURL)
+                    } label: {
+                        Label("Contribute", systemImage: "chevron.left.forwardslash.chevron.right")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Color.peekAccent)
+                            .padding(.horizontal, 14).padding(.vertical, 8)
+                            .overlay(Capsule().strokeBorder(Color.peekAccent, lineWidth: 1.2))
+                    }
+                    .buttonStyle(.plain)
+                }
+                Link("github.com/doitrous/peek", destination: peekRepoURL)
+                    .font(.caption)
             }
         }
         .formStyle(.grouped)
