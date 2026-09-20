@@ -45,18 +45,18 @@
 
     <g transform="rotate(-14 420 450)">
       <rect x="255" y="312" width="350" height="316" rx="39" fill="#761738" opacity="0.34" filter="url(#blur)"/>
-      <rect x="245" y="292" width="350" height="316" rx="39" fill="url(#rear-card)"/>
+      <rect x="245" y="292" width="350" height="316" rx="39" fill="url(#rear-card)" stroke="#000" stroke-width="8"/>
     </g>
 
     <g transform="rotate(-8 523 500)">
       <rect x="342" y="358" width="385" height="325" rx="40" fill="#731338" opacity="0.38" filter="url(#blur)"/>
-      <rect x="330" y="338" width="385" height="325" rx="40" fill="url(#middle-card)"/>
+      <rect x="330" y="338" width="385" height="325" rx="40" fill="url(#middle-card)" stroke="#000" stroke-width="8"/>
     </g>
 
     <g transform="rotate(-6 613 565)">
       <rect x="425" y="406" width="375" height="315" rx="42" fill="#fff" opacity="0.6" filter="url(#glow)"/>
       <rect x="438" y="429" width="375" height="315" rx="42" fill="#751239" opacity="0.33" filter="url(#blur)"/>
-      <rect x="425" y="406" width="375" height="315" rx="42" fill="url(#front-card)"/>
+      <rect x="425" y="406" width="375" height="315" rx="42" fill="url(#front-card)" stroke="#000" stroke-width="8"/>
     </g>
   </g>
 </svg>
