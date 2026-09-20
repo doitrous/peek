@@ -1,0 +1,63 @@
+name: Bug report
+description: Something in Peek isn't working right
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please **do not** use this form for security
+        issues — see the [Security Policy](https://github.com/doitrous/peek/security/policy).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, and what you expected instead.
+      placeholder: When I press ⌘-Tab, ...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Press ...
+        3. See ...
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: "e.g. 15.1 (Sequoia)"
+    validations:
+      required: true
+  - type: dropdown
+    id: chip
+    attributes:
+      label: Mac type
+      options:
+        - Apple Silicon
+        - Intel
+    validations:
+      required: true
+  - type: input
+    id: peek-version
+    attributes:
+      label: Peek version
+      description: Menu bar → About / the release you built.
+      placeholder: "e.g. 0.1.0 or a commit SHA"
+    validations:
+      required: true
+  - type: checkboxes
+    id: permissions
+    attributes:
+      label: Permissions granted
+      options:
+        - label: Accessibility
+        - label: Screen Recording
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Any relevant Console output (filter by "Peek") or a screenshot.
