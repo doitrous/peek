@@ -147,3 +147,5 @@
 "First / last window" = "النافذة الأولى / الأخيرة";
 "Pin or unpin the highlighted app" = "تثبيت أو إلغاء تثبيت التطبيق المميَّز";
 "Quit the highlighted app (⌥ to force)" = "إنهاء التطبيق المميَّز (⌥ للإنهاء القسري)";
+"No open windows" = "لا نوافذ مفتوحة";
+"Open %@" = "فتح %@";

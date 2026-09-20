@@ -10,6 +10,7 @@ struct WindowInfo {
     let appName: String
     let title: String
     let appIcon: NSImage?
+    var isWindowless = false      // a running app with no windows — shown as a tile at the end
 }
 
 /// Enumerates switchable windows across every Space. Needs Screen Recording

@@ -2,3 +2,5 @@
    key, so any string missing from a translation falls back to readable English.
    This file only needs to exist to register "en" as a real localization. */
 "Language" = "Language";
+"No open windows" = "No open windows";
+"Open %@" = "Open %@";

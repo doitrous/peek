@@ -94,14 +94,15 @@ final class AppController: NSObject, NSApplicationDelegate {
         }
         let order = WindowRanker.order(items: items, events: stats.events,
                                        pinned: pins.pinned, useAffinity: settings.stickyApps)
-        windows = order.map { listed[$0] }
+        windows = order.map { listed[$0] } + windowlessApps(excluding: Set(listed.map(\.appName)))
 
         let aff = settings.stickyApps ? WindowRanker.affinity(events: stats.events) : [:]
         let maxAff = max(aff.values.max() ?? 0, 0.0001)
         let switcherItems = windows.map { w in
             SwitcherItem(title: w.title, appName: w.appName, icon: w.appIcon, pid: w.pid,
                          isPinned: pins.isPinned(w.appName),
-                         strength: min(1, (aff[w.appName] ?? 0) / maxAff))
+                         strength: min(1, (aff[w.appName] ?? 0) / maxAff),
+                         isWindowless: w.isWindowless)
         }
         pendingSelection = backwards ? windows.count - 1 : min(1, windows.count - 1)
 
@@ -129,6 +130,22 @@ final class AppController: NSObject, NSApplicationDelegate {
         let delay = settings.appearDelayMs / 1000
         if delay > 0 { DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: present) }
         else { present.perform() }
+    }
+
+    // Running regular apps with no window on any Space (their windows are all
+    // closed — not minimized). They can't be switched to normally, so Peek lists
+    // them as compact tiles at the end; picking one reopens the app.
+    private func windowlessApps(excluding windowed: Set<String>) -> [WindowInfo] {
+        let myPID = ProcessInfo.processInfo.processIdentifier
+        return NSWorkspace.shared.runningApplications
+            .filter { $0.activationPolicy == .regular && $0.processIdentifier != myPID }
+            .compactMap { app -> WindowInfo? in
+                guard let name = app.localizedName,
+                      !windowed.contains(name), !settings.isHidden(name) else { return nil }
+                return WindowInfo(windowID: 0, pid: app.processIdentifier, appName: name,
+                                  title: name, appIcon: app.icon, isWindowless: true)
+            }
+            .sorted { $0.appName.localizedCaseInsensitiveCompare($1.appName) == .orderedAscending }
     }
 
     private func updatePreview() {
