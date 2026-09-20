@@ -1,10 +1,12 @@
 import AppKit
 import ApplicationServices
+import CoreGraphics
+import ServiceManagement
 import PeekCore
 
-/// Wires the menu bar, hotkey, window list, switcher panel, activator, and stats together.
+/// Wires the menu bar, hotkey, window list, switcher panel, activator, stats and settings together.
 final class AppController: NSObject, NSApplicationDelegate {
-    private var statusItem: NSStatusItem!
+    private var statusItem: NSStatusItem?
     private let lister = WindowLister()
     private let activator = WindowActivator()
     private let stats = StatsStore()
@@ -17,24 +19,26 @@ final class AppController: NSObject, NSApplicationDelegate {
     private let panel = SwitcherPanel()
     private var hotKey: HotKey!
     private var dashboard: DashboardWindowController?
+    private var settingsWC: SettingsWindowController?
     private var intro: IntroWindowController?
     private var stickyItem: NSMenuItem?
 
     private var windows: [WindowInfo] = []
     private var lastApp: String?
+    private var pendingShow: DispatchWorkItem?     // for the "appear delay" setting
+    private var pendingSelection = 0
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        setupMenuBar()
         requestPermissions()
 
-        panel.onSelect = { [weak self] _ in self?.updatePreview() }   // hover moved highlight
-        panel.onChoose = { [weak self] in self?.commit() }            // row clicked
+        panel.onSelect = { [weak self] _ in self?.updatePreview() }
+        panel.onChoose = { [weak self] in self?.commit() }
         panel.onTogglePin = { [weak self] idx in self?.togglePin(at: idx) }
         panel.onQuit = { [weak self] idx, force in self?.quitApp(at: idx, force: force) }
 
         systemStats.onUpdate = { [weak self] snap in
             guard let self, self.panel.isShown else { return }
-            self.panel.setSystemStats(snap)   // live-refresh while the column is visible
+            self.panel.setSystemStats(snap)
         }
         systemStats.start()
 
@@ -43,12 +47,11 @@ final class AppController: NSObject, NSApplicationDelegate {
             onCommit: { [weak self] in self?.commit() },
             onCancel: { [weak self] in self?.cancel() }
         )
-        if !hotKey.start() {
-            notifyAccessibilityNeeded()
-        }
+        settings.onChange = { [weak self] in self?.applyLiveSettings() }
+        applyLiveSettings()                        // theme, login item, menu-bar icon, hotkey config
+        if !hotKey.start() { notifyAccessibilityNeeded() }
 
         if !settings.hasSeenIntro {
-            // Slight delay so it doesn't stack on top of the permission prompts.
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in self?.showIntro() }
         }
     }
@@ -56,45 +59,62 @@ final class AppController: NSObject, NSApplicationDelegate {
     // MARK: Switching
 
     private func cycle(backwards: Bool) {
-        if !panel.isShown {
-            let listed = lister.listWindows()
-            guard !listed.isEmpty else { return }
-            // Pins always float; the learning layer (affinity) only when sticky is on.
-            let items = listed.enumerated().map {
-                WindowRanker.Item(app: $0.element.appName, originalIndex: $0.offset)
-            }
-            let order = WindowRanker.order(items: items, events: stats.events,
-                                           pinned: pins.pinned, useAffinity: settings.stickyApps)
-            windows = order.map { listed[$0] }
-
-            // Normalised affinity strength for the on-row meters (learning on only).
-            let aff = settings.stickyApps ? WindowRanker.affinity(events: stats.events) : [:]
-            let maxAff = max(aff.values.max() ?? 0, 0.0001)
-
-            let switcherItems = windows.map { w in
-                SwitcherItem(title: w.title, appName: w.appName, icon: w.appIcon, pid: w.pid,
-                             isPinned: pins.isPinned(w.appName),
-                             strength: min(1, (aff[w.appName] ?? 0) / maxAff))
-            }
-            // First press lands on the previous window (index 1), like ⌘-Tab.
-            let start = backwards ? windows.count - 1 : min(1, windows.count - 1)
-            panel.setSystemStats(systemStats.current)
-            panel.show(items: switcherItems, selected: start, showStrength: settings.stickyApps)
-            startUsageSampling()
-        } else {
+        if panel.isShown {
             panel.advance(backwards: backwards)
+            updatePreview()
+            return
         }
-        updatePreview()
+        if pendingShow != nil {                     // still within the appear delay — just move selection
+            let n = windows.count
+            if n > 0 { pendingSelection = ((pendingSelection + (backwards ? -1 : 1)) % n + n) % n }
+            return
+        }
+
+        let listed = lister.listWindows().filter { !settings.isHidden($0.appName) }
+        guard !listed.isEmpty else { return }
+
+        let items = listed.enumerated().map {
+            WindowRanker.Item(app: $0.element.appName, originalIndex: $0.offset)
+        }
+        let order = WindowRanker.order(items: items, events: stats.events,
+                                       pinned: pins.pinned, useAffinity: settings.stickyApps)
+        windows = order.map { listed[$0] }
+
+        let aff = settings.stickyApps ? WindowRanker.affinity(events: stats.events) : [:]
+        let maxAff = max(aff.values.max() ?? 0, 0.0001)
+        let switcherItems = windows.map { w in
+            SwitcherItem(title: w.title, appName: w.appName, icon: w.appIcon, pid: w.pid,
+                         isPinned: pins.isPinned(w.appName),
+                         strength: min(1, (aff[w.appName] ?? 0) / maxAff))
+        }
+        pendingSelection = backwards ? windows.count - 1 : min(1, windows.count - 1)
+
+        let present = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.pendingShow = nil
+            self.panel.setSystemStats(self.systemStats.current)
+            self.panel.show(items: switcherItems, selected: self.pendingSelection,
+                            showStrength: self.settings.stickyApps,
+                            showPreview: self.settings.showPreview,
+                            animate: self.settings.animationsEnabled,
+                            fade: self.settings.animationsEnabled && self.settings.fadeInOut,
+                            onScreen: self.targetScreen(),
+                            allSpaces: self.settings.spaces == .allSpaces)
+            self.startUsageSampling()
+            self.updatePreview()
+        }
+        pendingShow = present
+        let delay = settings.appearDelayMs / 1000
+        if delay > 0 { DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: present) }
+        else { present.perform() }
     }
 
-    // Capture only the highlighted window's thumbnail — one image in memory at a time.
-    // Captured OFF the main thread so hover/cycle stays instant; the icon shows
-    // immediately and the screenshot drops in a beat later (stale results discarded).
     private func updatePreview() {
+        guard settings.showPreview else { panel.setPreview(nil); return }
         let idx = panel.selectedIndex
         guard windows.indices.contains(idx) else { return }
         let wid = windows[idx].windowID
-        panel.setPreview(nil)   // instant: fall back to the app icon while capturing
+        panel.setPreview(nil)
         DispatchQueue.global(qos: .userInteractive).async { [weak self] in
             let image = WindowLister.capture(wid)
             DispatchQueue.main.async {
@@ -106,8 +126,39 @@ final class AppController: NSObject, NSApplicationDelegate {
         }
     }
 
-    // Live per-app CPU/RAM — only the visible pids, only while shown, on a serial
-    // background queue. Stops the moment the switcher hides.
+    private func commit() {
+        // Released during the appear delay → quick switch to the pending selection.
+        if let p = pendingShow {
+            p.cancel(); pendingShow = nil
+            if settings.releaseAction == .switchToSelected, windows.indices.contains(pendingSelection) {
+                switchTo(windows[pendingSelection])
+            }
+            return
+        }
+        guard panel.isShown, windows.indices.contains(panel.selectedIndex) else {
+            stopUsageSampling(); panel.hide(); return
+        }
+        let chosen = windows[panel.selectedIndex]
+        stopUsageSampling()
+        panel.hide()
+        guard settings.releaseAction == .switchToSelected else { return }
+        switchTo(chosen)
+    }
+
+    private func switchTo(_ window: WindowInfo) {
+        activator.activate(window)
+        stats.record(SwitchEvent(fromApp: lastApp, toApp: window.appName))
+        lastApp = window.appName
+        dashboard?.refresh()
+    }
+
+    private func cancel() {
+        if let p = pendingShow { p.cancel(); pendingShow = nil; return }
+        stopUsageSampling()
+        panel.hide()
+    }
+
+    // Live per-app CPU/RAM — only the visible pids, only while shown, on a serial queue.
     private func startUsageSampling() {
         let pids = Set(windows.map(\.pid))
         usageTimer?.invalidate()
@@ -133,22 +184,6 @@ final class AppController: NSObject, NSApplicationDelegate {
         usageTimer = nil
     }
 
-    private func commit() {
-        guard panel.isShown, windows.indices.contains(panel.selectedIndex) else {
-            stopUsageSampling(); panel.hide(); return
-        }
-        let chosen = windows[panel.selectedIndex]
-        stopUsageSampling()
-        panel.hide()
-        activator.activate(chosen)
-        stats.record(SwitchEvent(fromApp: lastApp, toApp: chosen.appName))
-        lastApp = chosen.appName
-        dashboard?.refresh()
-    }
-
-    private func cancel() { stopUsageSampling(); panel.hide() }
-
-    // Quit (or force-quit) the app for a row, then drop its windows from the list.
     private func quitApp(at index: Int, force: Bool) {
         guard windows.indices.contains(index) else { return }
         let pid = windows[index].pid
@@ -157,14 +192,9 @@ final class AppController: NSObject, NSApplicationDelegate {
         }
         windows.removeAll { $0.pid == pid }
         panel.removeItems(pid: pid)
-        if windows.isEmpty {
-            panel.hide()
-        } else {
-            updatePreview()
-        }
+        if windows.isEmpty { stopUsageSampling(); panel.hide() } else { updatePreview() }
     }
 
-    // Pin/unpin from a switcher row without switching. Pins float immediately next ⌘-Tab.
     private func togglePin(at index: Int) {
         guard windows.indices.contains(index) else { return }
         let app = windows[index].appName
@@ -173,44 +203,99 @@ final class AppController: NSObject, NSApplicationDelegate {
         dashboard?.refresh()
     }
 
+    // MARK: Applying settings
+
+    private func applyLiveSettings() {
+        applyTheme()
+        applyLoginItem()
+        applyMenuBarIcon()
+        hotKey?.modifier = modifierFlag(settings.activation)
+        hotKey?.arrowKeysEnabled = settings.arrowKeys
+        stickyItem?.state = settings.stickyApps ? .on : .off
+    }
+
+    private func applyTheme() {
+        switch settings.theme {
+        case .system: NSApp.appearance = nil
+        case .light:  NSApp.appearance = NSAppearance(named: .aqua)
+        case .dark:   NSApp.appearance = NSAppearance(named: .darkAqua)
+        }
+    }
+
+    private func applyLoginItem() {
+        do {
+            let svc = SMAppService.mainApp
+            if settings.startAtLogin {
+                if svc.status != .enabled { try svc.register() }
+            } else if svc.status == .enabled {
+                try svc.unregister()
+            }
+        } catch {
+            NSLog("Peek: login-item update failed: \(error)")
+        }
+    }
+
+    private func modifierFlag(_ s: ActivationShortcut) -> CGEventFlags {
+        switch s {
+        case .commandTab: return .maskCommand
+        case .optionTab:  return .maskAlternate
+        case .controlTab: return .maskControl
+        }
+    }
+
+    private func targetScreen() -> NSScreen? {
+        switch settings.display {
+        case .mainDisplay:
+            return NSScreen.screens.first
+        case .pointerDisplay:
+            let loc = NSEvent.mouseLocation
+            return NSScreen.screens.first { NSMouseInRect(loc, $0.frame, false) } ?? NSScreen.main
+        }
+    }
+
     // MARK: Menu bar
 
-    private func setupMenuBar() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem.button?.image = NSImage(
-            systemSymbolName: "square.stack.3d.up.fill", accessibilityDescription: "Peek"
-        )
+    private func buildMenu() -> NSMenu {
         let menu = NSMenu()
         let sticky = menu.addItem(withTitle: "Sticky apps", action: #selector(toggleSticky), keyEquivalent: "")
         sticky.target = self
         sticky.state = settings.stickyApps ? .on : .off
         stickyItem = sticky
+        let set = menu.addItem(withTitle: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
+        set.target = self
         let dash = menu.addItem(withTitle: "Switching Insights…", action: #selector(showDashboard), keyEquivalent: "d")
         dash.target = self
         menu.addItem(.separator())
         let quit = menu.addItem(withTitle: "Quit Peek", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
-        statusItem.menu = menu
+        return menu
+    }
+
+    private func applyMenuBarIcon() {
+        guard settings.showMenuBarIcon else {
+            if let item = statusItem { NSStatusBar.system.removeStatusItem(item); statusItem = nil }
+            return
+        }
+        if statusItem == nil {
+            statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+            statusItem?.menu = buildMenu()
+        }
+        if let button = statusItem?.button {
+            let image = NSImage(systemSymbolName: settings.iconStyle.symbol, accessibilityDescription: "Peek")
+            image?.isTemplate = settings.iconTint == .monochrome
+            button.image = image
+            button.contentTintColor = settings.iconTint == .accent ? .controlAccentColor : nil
+        }
     }
 
     @objc private func toggleSticky() {
-        settings.stickyApps.toggle()
-        stickyItem?.state = settings.stickyApps ? .on : .off
+        settings.stickyApps.toggle()                 // persists + onChange updates the checkmark
     }
 
-    private func showIntro() {
-        let wc = IntroWindowController(
-            onEnable: { [weak self] in
-                self?.settings.stickyApps = true
-                self?.settings.hasSeenIntro = true
-                self?.stickyItem?.state = .on
-            },
-            onNotNow: { [weak self] in self?.settings.hasSeenIntro = true }
-        )
-        intro = wc
+    @objc private func showSettings() {
+        if settingsWC == nil { settingsWC = SettingsWindowController(settings: settings) }
         NSApp.activate(ignoringOtherApps: true)
-        wc.showWindow(nil)
-        wc.window?.makeKeyAndOrderFront(nil)
+        settingsWC?.window?.makeKeyAndOrderFront(nil)
     }
 
     @objc private func showDashboard() {
@@ -229,14 +314,26 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     @objc private func quit() { NSApp.terminate(nil) }
 
+    private func showIntro() {
+        let wc = IntroWindowController(
+            onEnable: { [weak self] in
+                self?.settings.stickyApps = true
+                self?.settings.hasSeenIntro = true
+            },
+            onNotNow: { [weak self] in self?.settings.hasSeenIntro = true }
+        )
+        intro = wc
+        NSApp.activate(ignoringOtherApps: true)
+        wc.showWindow(nil)
+        wc.window?.makeKeyAndOrderFront(nil)
+    }
+
     // MARK: Permissions
 
     private func requestPermissions() {
         let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        _ = AXIsProcessTrustedWithOptions(opts)          // Accessibility (raise windows + event tap)
-        if !CGPreflightScreenCaptureAccess() {           // Screen Recording (titles + thumbnails)
-            CGRequestScreenCaptureAccess()
-        }
+        _ = AXIsProcessTrustedWithOptions(opts)
+        if !CGPreflightScreenCaptureAccess() { CGRequestScreenCaptureAccess() }
     }
 
     private func notifyAccessibilityNeeded() {

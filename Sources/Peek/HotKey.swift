@@ -15,10 +15,17 @@ final class HotKey {
     private let onCancel: () -> Void
 
     private var tap: CFMachPort?
-    private var active = false        // between the first ⌘-Tab and ⌘ release
+    private var active = false        // between the first trigger and modifier release
+
+    /// The activation modifier (⌘ by default). Settable live from Settings.
+    var modifier: CGEventFlags = .maskCommand
+    /// Whether ↑/↓/←/→ navigate while the switcher is open.
+    var arrowKeysEnabled = true
 
     private let tabKey: CGKeyCode = 48
     private let escKey: CGKeyCode = 53
+    private let arrowDown: CGKeyCode = 125, arrowUp: CGKeyCode = 126
+    private let arrowLeft: CGKeyCode = 123, arrowRight: CGKeyCode = 124
 
     init(onCycle: @escaping (Bool) -> Void,
          onCommit: @escaping () -> Void,
@@ -61,15 +68,19 @@ final class HotKey {
         }
 
         let flags = event.flags
-        let cmdDown = flags.contains(.maskCommand)
+        let modifierDown = flags.contains(modifier)
 
         switch type {
         case .keyDown:
             let code = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
-            if code == tabKey, cmdDown {
+            if code == tabKey, modifierDown {
                 active = true
                 onCycle(flags.contains(.maskShift))
                 return nil                 // swallow → system switcher never sees it
+            }
+            if active, arrowKeysEnabled, [arrowDown, arrowUp, arrowLeft, arrowRight].contains(code) {
+                onCycle(code == arrowUp || code == arrowLeft)   // up/left = backward
+                return nil
             }
             if active, code == escKey {
                 active = false
@@ -77,7 +88,7 @@ final class HotKey {
                 return nil
             }
         case .flagsChanged:
-            if active, !cmdDown {           // ⌘ released → commit
+            if active, !modifierDown {      // modifier released → commit
                 active = false
                 onCommit()
             }
