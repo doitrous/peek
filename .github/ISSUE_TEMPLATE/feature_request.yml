@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest an idea or improvement for Peek
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What are you trying to do that Peek makes hard today?
+      placeholder: When I have many windows open, I ...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would you like Peek to do?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches, or how you work around this now.
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else?
+      description: Mockups, related tools, or extra context.
