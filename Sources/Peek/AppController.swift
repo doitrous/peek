@@ -33,9 +33,14 @@ final class AppController: NSObject, NSApplicationDelegate {
     private var lastApp: String?
     private var pendingShow: DispatchWorkItem?     // for the "appear delay" setting
     private var pendingSelection = 0
+    // True most-recently-used app order (pids, most recent first). Comes from real
+    // activation events, so it's correct across Spaces — unlike CGWindow z-order,
+    // which sinks off-Space/fullscreen windows and breaks quick back-and-forth.
+    private var appOrder: [pid_t] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         requestPermissions()
+        trackAppActivations()
 
         panel.onSelect = { [weak self] _ in self?.updatePreview() }
         panel.onChoose = { [weak self] in self?.commit() }
@@ -68,6 +73,25 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     // MARK: Switching
 
+    // Follow macOS app activations to keep a real MRU order. This fires whether the
+    // user switched via Peek, ⌘-Tab, the Dock or a click, and reports fullscreen
+    // apps like any other — so the app you just left is always the next one back.
+    private func trackAppActivations() {
+        if let front = NSWorkspace.shared.frontmostApplication {
+            appOrder = [front.processIdentifier]
+        }
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
+        ) { [weak self] note in
+            guard let self,
+                  let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+            else { return }
+            let pid = app.processIdentifier
+            self.appOrder.removeAll { $0 == pid }
+            self.appOrder.insert(pid, at: 0)
+        }
+    }
+
     private func cycle(backwards: Bool) {
         if panel.isShown {
             panel.advance(backwards: backwards)
@@ -84,10 +108,19 @@ final class AppController: NSObject, NSApplicationDelegate {
         // so an app with several windows — e.g. Chrome — shows once, not N times.
         // Ranking, pins and affinity are all keyed by app, so this matches the model.
         var seenApps = Set<String>()
-        let listed = lister.listWindows()
+        let deduped = lister.listWindows()
             .filter { !settings.isHidden($0.appName) }
             .filter { seenApps.insert($0.appName).inserted }
-        guard !listed.isEmpty else { return }
+        guard !deduped.isEmpty else { return }
+
+        // Order by real activation recency, not CGWindow z-order: z-order sinks a
+        // fullscreen app you just left (it's on its own Space), so a quick ⌘-Tab
+        // wouldn't return to it. MRU rank puts the previous app back at index 1.
+        let rank = Dictionary(appOrder.enumerated().map { ($1, $0) }, uniquingKeysWith: { a, _ in a })
+        let listed = deduped.enumerated().sorted { a, b in
+            let ra = rank[a.element.pid] ?? Int.max, rb = rank[b.element.pid] ?? Int.max
+            return ra != rb ? ra < rb : a.offset < b.offset
+        }.map(\.element)
 
         let items = listed.enumerated().map {
             WindowRanker.Item(app: $0.element.appName, originalIndex: $0.offset)
