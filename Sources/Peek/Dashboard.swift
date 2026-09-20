@@ -151,7 +151,7 @@ struct DashboardView: View {
                         } label: {
                             Image(systemName: a.pinned ? "pin.fill" : "pin")
                                 .rotationEffect(.degrees(45))
-                                .foregroundStyle(a.pinned ? Color.accentColor : .secondary)
+                                .foregroundStyle(a.pinned ? Color.peekAccent : .secondary)
                         }
                         .buttonStyle(.plain)
                         .help(a.pinned ? "Unpin \(a.app)" : "Pin \(a.app) to the top")
@@ -161,7 +161,7 @@ struct DashboardView: View {
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
                                 Capsule().fill(.quaternary.opacity(0.5))
-                                Capsule().fill(a.pinned ? Color.accentColor : Color.accentColor.opacity(0.55))
+                                Capsule().fill(a.pinned ? Color.peekAccent : Color.peekAccent.opacity(0.55))
                                     .frame(width: max(4, geo.size.width * (a.score / maxScore)))
                             }
                         }
@@ -183,11 +183,11 @@ struct DashboardView: View {
             Chart(model.perDay) { d in
                 AreaMark(x: .value("Day", d.day, unit: .day), y: .value("Switches", d.count))
                     .interpolationMethod(.catmullRom)
-                    .foregroundStyle(.linearGradient(colors: [.accentColor.opacity(0.5), .accentColor.opacity(0.05)],
+                    .foregroundStyle(.linearGradient(colors: [.peekAccent.opacity(0.5), .peekAccent.opacity(0.05)],
                                                      startPoint: .top, endPoint: .bottom))
                 LineMark(x: .value("Day", d.day, unit: .day), y: .value("Switches", d.count))
                     .interpolationMethod(.catmullRom)
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Color.peekAccent)
                 if let selectedDay, let sel = model.perDay.first(where: {
                     Calendar.current.isDate($0.day, inSameDayAs: selectedDay)
                 }) {
@@ -207,7 +207,7 @@ struct DashboardView: View {
         card("Top apps") {
             Chart(model.topApps) { a in
                 BarMark(x: .value("Switches", a.count), y: .value("App", a.app))
-                    .foregroundStyle(Color.accentColor.gradient)
+                    .foregroundStyle(Color.peekAccent.gradient)
                     .cornerRadius(4)
                     .annotation(position: .trailing) {
                         Text("\(a.count)").font(.caption2).foregroundStyle(.secondary)
@@ -221,7 +221,7 @@ struct DashboardView: View {
         card("By hour of day") {
             Chart(model.hourly) { h in
                 BarMark(x: .value("Hour", h.hour), y: .value("Switches", h.count))
-                    .foregroundStyle(Color.accentColor.gradient)
+                    .foregroundStyle(Color.peekAccent.gradient)
             }
             .chartXScale(domain: 0...23)
             .chartXAxis { AxisMarks(values: [0, 6, 12, 18, 23]) }

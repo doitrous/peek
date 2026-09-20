@@ -254,7 +254,7 @@ private struct SwitcherColumn: View {
                 Image(systemName: item.isPinned ? "pin.fill" : "pin")
                     .font(.system(size: 13))
                     .rotationEffect(.degrees(45))
-                    .foregroundStyle(item.isPinned ? Color.accentColor : .secondary)
+                    .foregroundStyle(item.isPinned ? Color.peekAccent : .secondary)
                     .frame(width: 26, height: 26)
                     .contentShape(Rectangle())
             }
@@ -266,11 +266,11 @@ private struct SwitcherColumn: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(selected ? Color.accentColor.opacity(0.34) : .clear)
+                .fill(selected ? Color.peekAccent.opacity(0.34) : .clear)
         )
         .overlay(alignment: .leading) {
             RoundedRectangle(cornerRadius: 2)
-                .fill(Color.accentColor)
+                .fill(Color.peekAccent)
                 .frame(width: 3, height: selected ? 32 : 0)
                 .padding(.leading, 3)
         }
@@ -377,7 +377,7 @@ private struct AffinityMeter: View {
         HStack(alignment: .bottom, spacing: 2) {
             ForEach(0..<4, id: \.self) { i in
                 Capsule()
-                    .fill(i < filled ? Color.accentColor : Color.secondary.opacity(0.25))
+                    .fill(i < filled ? Color.peekAccent : Color.secondary.opacity(0.25))
                     .frame(width: 3, height: heights[i])
             }
         }

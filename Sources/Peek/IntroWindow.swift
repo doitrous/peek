@@ -66,8 +66,8 @@ private struct IntroView: View {
     private var footer: some View {
         HStack(spacing: 12) {
             HStack(spacing: 6) {
-                Circle().fill(step == 0 ? Color.accentColor : Color.secondary.opacity(0.4)).frame(width: 7, height: 7)
-                Circle().fill(step == 1 ? Color.accentColor : Color.secondary.opacity(0.4)).frame(width: 7, height: 7)
+                Circle().fill(step == 0 ? Color.peekAccent : Color.secondary.opacity(0.4)).frame(width: 7, height: 7)
+                Circle().fill(step == 1 ? Color.peekAccent : Color.secondary.opacity(0.4)).frame(width: 7, height: 7)
             }
             Spacer()
             if step == 0 {
@@ -137,22 +137,22 @@ private struct PinningStep: View {
                     Spacer(minLength: 0)
                     if r.nextHop {
                         Text("next ⌘-Tab").font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(Color.accentColor)
+                            .foregroundStyle(Color.peekAccent)
                     }
                     if r.pinned {
                         Image(systemName: "pin.fill").rotationEffect(.degrees(45))
-                            .font(.system(size: 10)).foregroundStyle(Color.accentColor)
+                            .font(.system(size: 10)).foregroundStyle(Color.peekAccent)
                     }
                 }
                 .padding(.horizontal, 10).padding(.vertical, 8)
                 .background(
                     RoundedRectangle(cornerRadius: 9)
-                        .fill(r.nextHop ? Color.accentColor.opacity(0.22)
+                        .fill(r.nextHop ? Color.peekAccent.opacity(0.22)
                               : (r.current ? Color.primary.opacity(0.10) : Color.primary.opacity(0.05)))
                 )
                 .overlay(alignment: .leading) {
                     if r.nextHop {
-                        RoundedRectangle(cornerRadius: 2).fill(Color.accentColor)
+                        RoundedRectangle(cornerRadius: 2).fill(Color.peekAccent)
                             .frame(width: 3, height: 22).padding(.leading, 2)
                     }
                 }
@@ -222,13 +222,13 @@ private struct StickyStep: View {
                     strengthBars(for: app.uses / maxUses)
                     if app.pinned {
                         Image(systemName: "pin.fill").rotationEffect(.degrees(45))
-                            .font(.system(size: 10)).foregroundStyle(Color.accentColor)
+                            .font(.system(size: 10)).foregroundStyle(Color.peekAccent)
                     }
                 }
                 .padding(.horizontal, 10).padding(.vertical, 8)
                 .background(
                     RoundedRectangle(cornerRadius: 9)
-                        .fill(app.id == justUsed ? Color.accentColor.opacity(0.28) : Color.primary.opacity(0.05))
+                        .fill(app.id == justUsed ? Color.peekAccent.opacity(0.28) : Color.primary.opacity(0.05))
                 )
             }
         }
@@ -239,7 +239,7 @@ private struct StickyStep: View {
         return HStack(alignment: .bottom, spacing: 2) {
             ForEach(0..<4, id: \.self) { i in
                 Capsule()
-                    .fill(i < filled ? Color.accentColor : Color.secondary.opacity(0.25))
+                    .fill(i < filled ? Color.peekAccent : Color.secondary.opacity(0.25))
                     .frame(width: 3, height: [5, 8, 11, 14][i])
             }
         }.frame(height: 14)
