@@ -80,7 +80,13 @@ final class AppController: NSObject, NSApplicationDelegate {
             return
         }
 
-        let listed = lister.listWindows().filter { !settings.isHidden($0.appName) }
+        // One row per app: keep the frontmost window of each (the list is z-ordered),
+        // so an app with several windows — e.g. Chrome — shows once, not N times.
+        // Ranking, pins and affinity are all keyed by app, so this matches the model.
+        var seenApps = Set<String>()
+        let listed = lister.listWindows()
+            .filter { !settings.isHidden($0.appName) }
+            .filter { seenApps.insert($0.appName).inserted }
         guard !listed.isEmpty else { return }
 
         let items = listed.enumerated().map {
