@@ -15,6 +15,7 @@ final class SwitcherModel: ObservableObject {
     @Published var selected: Int = 0
     @Published var preview: NSImage?          // only the selected window's thumbnail — RAM-lite
     @Published var showStrength = false       // affinity meters (learning on)
+    @Published var system: SystemSnapshot?    // live CPU / RAM / battery footer
     var onSelect: ((Int) -> Void)?            // hover moved the highlight
     var onChoose: (() -> Void)?               // a row was clicked
     var onTogglePin: ((Int) -> Void)?         // pin button on a row
@@ -43,7 +44,7 @@ final class SwitcherPanel {
 
     private let width: CGFloat = 380
     private let rowHeight: CGFloat = 56
-    private let chrome: CGFloat = 220 + 28 + 32   // preview + hints + padding
+    private let chrome: CGFloat = 220 + 28 + 26 + 40   // preview + hints + stats + padding
 
     init() {
         panel = NSPanel(
@@ -84,6 +85,8 @@ final class SwitcherPanel {
 
     func setPreview(_ image: NSImage?) { model.preview = image }
 
+    func setSystemStats(_ snap: SystemSnapshot?) { model.system = snap }
+
     /// Flip the pin badge on every row belonging to `app` (keeps row identity/animation).
     func setItemPinned(app: String, pinned: Bool) {
         for i in model.items.indices where model.items[i].appName == app {
@@ -119,6 +122,7 @@ private struct SwitcherColumn: View {
                 }
             }
             hints
+            statsFooter
         }
         .padding(16)
         .background(.black.opacity(0.82), in: RoundedRectangle(cornerRadius: 18))
@@ -225,6 +229,38 @@ private struct SwitcherColumn: View {
         HStack(spacing: 5) {
             Text(key).foregroundStyle(.white.opacity(0.9))
             Text(label)
+        }
+    }
+
+    @ViewBuilder private var statsFooter: some View {
+        if let s = model.system {
+            HStack(spacing: 14) {
+                stat("cpu", String(format: "%.0f%%", s.cpuPercent))
+                stat("memorychip", String(format: "%.1f / %.0f GB", s.memUsedGB, s.memTotalGB))
+                if let b = s.batteryPercent {
+                    stat(batterySymbol(b), "\(b)%")
+                }
+            }
+            .font(.system(size: 11))
+            .foregroundStyle(.white.opacity(0.55))
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    private func stat(_ symbol: String, _ value: String) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: symbol).font(.system(size: 11))
+            Text(value).monospacedDigit()
+        }
+    }
+
+    private func batterySymbol(_ p: Int) -> String {
+        switch p {
+        case ..<13: return "battery.0"
+        case ..<38: return "battery.25"
+        case ..<63: return "battery.50"
+        case ..<88: return "battery.75"
+        default:    return "battery.100"
         }
     }
 

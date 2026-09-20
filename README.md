@@ -18,6 +18,8 @@ that **learns which apps you actually use**.
   independently of the learning layer.
 - **RAM-lite** — only the *selected* window's thumbnail is ever captured, one at
   a time.
+- **Live system footer** — CPU, memory, and battery at the bottom of the column,
+  sampled on a light 2s timer.
 
 ## Build & run
 

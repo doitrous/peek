@@ -10,6 +10,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     private let stats = StatsStore()
     private let pins = PinStore()
     private let settings = SettingsStore()
+    private let systemStats = SystemStats()
     private let panel = SwitcherPanel()
     private var hotKey: HotKey!
     private var dashboard: DashboardWindowController?
@@ -26,6 +27,12 @@ final class AppController: NSObject, NSApplicationDelegate {
         panel.onSelect = { [weak self] _ in self?.updatePreview() }   // hover moved highlight
         panel.onChoose = { [weak self] in self?.commit() }            // row clicked
         panel.onTogglePin = { [weak self] idx in self?.togglePin(at: idx) }
+
+        systemStats.onUpdate = { [weak self] snap in
+            guard let self, self.panel.isShown else { return }
+            self.panel.setSystemStats(snap)   // live-refresh while the column is visible
+        }
+        systemStats.start()
 
         hotKey = HotKey(
             onCycle: { [weak self] backwards in self?.cycle(backwards: backwards) },
@@ -67,6 +74,7 @@ final class AppController: NSObject, NSApplicationDelegate {
             }
             // First press lands on the previous window (index 1), like ⌘-Tab.
             let start = backwards ? windows.count - 1 : min(1, windows.count - 1)
+            panel.setSystemStats(systemStats.current)
             panel.show(items: switcherItems, selected: start, showStrength: settings.stickyApps)
         } else {
             panel.advance(backwards: backwards)
