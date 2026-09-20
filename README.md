@@ -1,86 +1,141 @@
+<div align="center">
+
+<img src="docs/images/icon.png" width="120" alt="Peek app icon">
+
 # Peek
 
-A minimal, native macOS window switcher — a lean AltTab-style replacement for
-`⌘-Tab` with a left-side column of **live window previews**, a built-in
-**dashboard of your switching habits** (SwiftUI + Swift Charts), and an order
-that **learns which apps you actually use**.
+**A native macOS window switcher that replaces `⌘-Tab` — and learns which apps you actually use.**
 
-## What makes it different
+Peek takes over the system `⌘-Tab` switcher with a left-side column of **live window
+previews**, per-app **CPU/RAM**, one-keystroke **quit** and **pin**, a built-in
+**dashboard of your switching habits**, and an order that gets smarter the more you use it.
 
-- **Sticky apps (opt-in, off by default)** — a learning layer: apps are ranked by
-  *recency-weighted switch frequency* (7-day half-life), so the more you switch to
-  an app the higher Peek floats it. Each row shows an **affinity meter** (signal
-  bars) so you can see what it's learned. A first-run window explains it with a
-  live demo; enable it there or anytime from the menu-bar icon. Until then, Peek
-  is a classic `⌘-Tab`. The current window always stays at index 0.
-- **Pinning (always on)** — pin apps to sit first via the 📌 button on every
-  switcher row (or the dashboard's **"Your apps"** list). Pins float to the top
-  independently of the learning layer.
-- **RAM-lite** — only the *selected* window's thumbnail is ever captured, one at
-  a time.
-- **Live system footer** — CPU, memory, and battery at the bottom of the column,
-  sampled on a light 2s timer.
-- **Per-app CPU / RAM** — each tile shows the app's live CPU% and memory. Sampled
-  only for the visible windows, only while the switcher is open, via a cheap
-  per-pid `proc_pid_rusage` call — no global scan, no background polling.
-- **Quit from the switcher** — an ✕ button on every row quits that app; hold ⌥
-  while clicking to force quit. The row disappears immediately.
-- **Settings** (menu bar → Settings…) — General (login item, menu-bar icon shape
-  & tint, language), Appearance (theme, preview toggle, animations + fade + appear
-  delay), Behavior (release action, arrow-key navigation, which display, Spaces),
-  Shortcuts (⌘/⌥/⌃ + Tab and the in-switcher keys), and Apps (hide apps from the
-  switcher).
-- **Arrow-key navigation** — while holding the activation modifier, use ↑/↓ (or
-  ←/→) to move the selection, not just Tab.
+<img src="docs/images/switcher.png" width="360" alt="The Peek switcher — live previews, CPU/RAM, affinity meters, pins">
 
-## Build & run
+</div>
+
+## Overrides the macOS switcher — same keys
+
+Peek intercepts `⌘-Tab` at the system level (a `CGEventTap`), so you keep the exact
+muscle memory you already have — **hold `⌘`, tap `Tab`** — but get Peek's column
+instead of Apple's. The native switcher never appears. Prefer a different trigger?
+Switch it to `⌥-Tab` or `⌃-Tab` in Settings.
+
+## Smart ordering — the whole point
+
+Most switchers show windows in a fixed order. Peek ranks them by how you actually work,
+using two independent layers:
+
+### 🧠 Sticky apps (opt-in learning, off by default)
+A lightweight learning layer scores every app by **recency-weighted switch frequency**
+(a 7-day half-life), so the more you switch to an app, the higher Peek floats it —
+**automatically**. Your busiest apps drift to the top and are always the first keystroke
+away, while apps you've cooled on quietly sink. Each row shows an **affinity meter**
+(signal bars) so you can *see* what Peek has learned. A first-run window explains it with a
+live demo; enable it there or anytime from the menu-bar icon. Until you do, Peek behaves
+like a classic `⌘-Tab`. The window you're leaving always stays at index 0, so a quick
+`⌘-Tab`-release is still "flip to the last app."
+
+### 📌 Pinning (always on)
+Pin the apps you always want first with the 📌 button on any row (or from the dashboard).
+Pinned apps float to the top of the switcher **independently** of the learning layer —
+always there, whether or not sticky apps is on.
+
+Together: pins give you a fixed home row; sticky apps orders everything else by real usage.
+
+<div align="center">
+<img src="docs/images/dashboard.png" width="720" alt="Switching Insights dashboard">
+</div>
+
+## 📊 Switching Insights
+
+A built-in dashboard (SwiftUI + Swift Charts) turns your switching history into a picture
+of **how your workflow actually works** — total switches, active days, busiest hour, most-used
+app, switches per day, top apps, hourly rhythm, and your most common app-to-app transitions.
+The **"Your apps"** panel shows the exact order that drives the switcher, with inline pinning.
+
+It's also the foundation for what's next: because Peek already understands your transitions
+and rhythms, it can grow **customizable, per-user workflows** — surfacing the right set of
+apps for the task you're in, at the time of day you usually do it. The data is already there;
+the automation is the roadmap.
+
+## Everything else
+
+- **Live previews, RAM-lite** — only the *selected* window's thumbnail is ever captured, one
+  at a time, via **ScreenCaptureKit**.
+- **Per-app CPU / RAM** — each row shows the app's live CPU% and memory, sampled only for the
+  visible windows, only while the switcher is open (a cheap per-pid `proc_pid_rusage` call —
+  no global scan, no background polling).
+- **Live system footer** — CPU, memory, and battery at the bottom of the column.
+- **Quit from the switcher** — `Q`/`W` or the ✕ button quits the highlighted app; hold `⌥`
+  to force quit. The row disappears immediately.
+- **Keyboard-first** — while holding the modifier: `Tab`/`⇧Tab` cycle, `↑↓` navigate,
+  **`1`–`9` jump** straight to a window, `Home`/`End` go to first/last, `P` pins.
+- **Settings** — theme, light/dark, animations, switcher position (left/center), max rows,
+  which display & Spaces, menu-bar icon shape & tint, hidden apps, and every shortcut toggle.
+- **5 languages** — English, Español, 中文, العربية (RTL), Français.
+- **Auto-update** — ships with [Sparkle](https://sparkle-project.org); **Check for Updates…**
+  is in the menu.
+
+<div align="center">
+<img src="docs/images/settings.png" width="620" alt="Peek Settings">
+</div>
+
+## Install
 
 ```bash
 bash setup-signing.sh   # once: stable self-signed identity (permission grants then persist)
-bash make-app.sh        # builds + installs /Applications/Peek.app (signed, release)
+bash make-app.sh        # builds + installs /Applications/Peek.app
 open /Applications/Peek.app
 ```
 
-Without `setup-signing.sh`, `make-app.sh` falls back to ad-hoc signing and macOS
-re-asks for permissions on every rebuild.
-
-Peek lives in the menu bar (▤ icon). First launch prompts for two permissions:
+Peek lives in the menu bar. First launch prompts for two permissions:
 
 1. **Accessibility** — to intercept `⌘-Tab` and raise windows.
 2. **Screen Recording** — to read window titles and capture thumbnails.
 
-Grant both in **System Settings → Privacy & Security**, then relaunch
-`Peek.app`. (Ad-hoc signing keeps the grant stable across rebuilds.)
+Grant both in **System Settings → Privacy & Security**, then relaunch. (A stable signature
+keeps the grants across rebuilds.)
 
-## Use
+> Distributing to others? See [`RELEASE.md`](RELEASE.md) for the Developer ID signing +
+> notarization + appcast flow.
+
+## Shortcuts
+
+Hold the activation modifier (`⌘` by default) and:
 
 | Keys | Action |
 |------|--------|
-| `⌘-Tab` (hold ⌘) | show switcher, advance selection |
-| `⌘-⇧-Tab` | advance backward |
-| release `⌘` | switch to the highlighted window |
+| `Tab` / `⇧Tab` | next / previous window |
+| `↑ ↓` (or `← →`) | navigate the selection |
+| `1`–`9` | jump straight to that window |
+| `Home` / `End` | first / last window |
+| `P` | pin / unpin the highlighted app |
+| `Q` / `W` | quit the highlighted app (`⌥` = force) |
+| release the modifier | switch to the highlighted window |
 | `Esc` | cancel |
-| hover a row / click | highlight / switch with the mouse |
-| menu bar → **Switching Insights…** | open the dashboard (charts + pinning) |
+| hover / click a row | highlight / switch with the mouse |
+| menu bar → **Switching Insights…** | open the dashboard |
 
-## Layout
+Every extra key can be toggled off in **Settings → Shortcuts**.
 
-- `Sources/PeekCore/` — pure, tested logic: `SwitchEvent`, `StatsStore` /
-  `PinStore` (JSON persistence), `StatsAggregator` (per-day / top-apps / hourly /
-  transitions), `WindowRanker` (affinity scoring + pin-aware ordering).
-- `Sources/Peek/` — the app: `HotKey` (CGEventTap), `WindowLister`
-  (`CGWindowList` + thumbnails), `SwitcherPanel` (SwiftUI overlay),
-  `WindowActivator` (Accessibility raise), `Dashboard` (Swift Charts).
-- `Tests/PeekCoreTests/` — `swift test` covers the aggregation logic.
+## Project layout
 
-## Known limits (v1)
+- `Sources/PeekCore/` — pure, tested logic: `SwitchEvent`, `StatsStore` / `PinStore` (JSON
+  persistence), `StatsAggregator` (per-day / top-apps / hourly / transitions), `WindowRanker`
+  (affinity scoring + pin-aware ordering).
+- `Sources/Peek/` — the app: `HotKey` (`CGEventTap`), `WindowLister` (`CGWindowList` +
+  ScreenCaptureKit thumbnails), `SwitcherPanel` (SwiftUI overlay), `WindowActivator`
+  (exact-window raise via AX + `_AXUIElementGetWindow`), `Dashboard` (Swift Charts),
+  `SettingsWindow`, `Localize`.
+- `Tests/PeekCoreTests/` — `swift test` covers ranking, aggregation, and persistence.
+- CI builds + tests every PR (`.github/workflows/ci.yml`).
 
-- **Blocking system `⌘-Tab`** relies on a `.cghidEventTap`. If macOS still
-  shows its own switcher on your setup, it's a permission/timing issue — the
-  fallback is to remap the trigger in `HotKey.swift` (e.g. Option+Tab).
-- Window raise matches by **title**; apps with duplicate titles fall back to
-  app activation. Precise per-window raise needs a private API.
-- Thumbnails are captured on show via the (deprecated but working)
-  `CGWindowListCreateImage`. Swap to ScreenCaptureKit if capture breaks.
-- Stats are a single JSON file rewritten per switch — fine to thousands of
-  events.
+## Requirements
+
+macOS 14+ · Swift 6 toolchain · Apple Silicon or Intel. Built with Swift Package Manager
+(no Xcode project needed).
+
+## License
+
+See [`LICENSE`](LICENSE). Issues and PRs welcome — Peek is open source.
