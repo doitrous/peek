@@ -20,6 +20,9 @@ that **learns which apps you actually use**.
   a time.
 - **Live system footer** — CPU, memory, and battery at the bottom of the column,
   sampled on a light 2s timer.
+- **Per-app CPU / RAM** — each tile shows the app's live CPU% and memory. Sampled
+  only for the visible windows, only while the switcher is open, via a cheap
+  per-pid `proc_pid_rusage` call — no global scan, no background polling.
 
 ## Build & run
 
