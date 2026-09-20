@@ -11,7 +11,9 @@ final class SettingsWindowController: NSWindowController {
         window.title = "Peek Settings"
         window.isReleasedWhenClosed = false
         super.init(window: window)
-        window.contentViewController = NSHostingController(rootView: SettingsView(settings: settings))
+        let host = NSHostingController(rootView: SettingsView(settings: settings))
+        host.sizingOptions = []          // let the window drive size; SwiftUI fills it
+        window.contentViewController = host
         window.setContentSize(NSSize(width: 640, height: 480))
         window.center()
     }
@@ -56,15 +58,16 @@ private struct SettingsView: View {
             }
             .padding(10)
             .frame(width: 170)
+            .frame(maxHeight: .infinity)
             .background(Color(nsColor: .windowBackgroundColor))
 
             Divider()
 
             ScrollView { detail.padding(.vertical, 4) }
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color(nsColor: .underPageBackgroundColor))
         }
-        .frame(width: 640, height: 480)
+        .frame(minWidth: 640, maxWidth: .infinity, minHeight: 480, maxHeight: .infinity)
     }
 
     @ViewBuilder private var detail: some View {
