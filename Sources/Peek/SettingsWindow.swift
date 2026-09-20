@@ -2,6 +2,9 @@ import AppKit
 import SwiftUI
 import PeekCore
 
+/// Where the "Support Peek" buttons (menu bar + Settings) send people.
+let peekDonateURL = URL(string: "https://paypal.me/Omary98")!
+
 final class SettingsWindowController: NSWindowController {
     init(settings: SettingsStore) {
         let window = NSWindow(
@@ -106,6 +109,23 @@ private struct SettingsView: View {
                 }
                 Text("English for now — more languages coming.")
                     .font(.caption).foregroundStyle(.secondary)
+            }
+            Section("Support") {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Peek is free and open source.")
+                        Text("If it saves you time, you can chip in.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button {
+                        NSWorkspace.shared.open(peekDonateURL)
+                    } label: {
+                        Label("Support Peek", systemImage: "heart.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.pink)
+                }
             }
         }
         .formStyle(.grouped)
