@@ -1,4 +1,5 @@
 import AppKit
+import ScreenCaptureKit
 
 /// One switchable window. Thumbnails are captured on demand (see `capture`),
 /// not here — so listing stays cheap and only the selected window's image is
@@ -46,12 +47,27 @@ final class WindowLister {
     }
 
     // RAM-lite: capture a single window's thumbnail only when it becomes the selection.
-    // ponytail: CGWindowListCreateImage is deprecated for ScreenCaptureKit but works with
-    // Screen Recording permission and is far less code. Swap to SCK if capture ever breaks.
-    static func capture(_ windowID: CGWindowID) -> NSImage? {
-        guard let cg = CGWindowListCreateImage(
-            .null, .optionIncludingWindow, windowID, [.boundsIgnoreFraming, .nominalResolution]
-        ), cg.width > 1, cg.height > 1 else { return nil }
-        return NSImage(cgImage: cg, size: NSSize(width: cg.width, height: cg.height))
+    // Uses ScreenCaptureKit (the supported replacement for the deprecated
+    // CGWindowListCreateImage); needs Screen Recording permission, same as listing.
+    static func capture(_ windowID: CGWindowID) async -> NSImage? {
+        do {
+            let content = try await SCShareableContent.excludingDesktopWindows(
+                false, onScreenWindowsOnly: true)
+            guard let win = content.windows.first(where: { $0.windowID == windowID }),
+                  win.frame.width > 1, win.frame.height > 1 else { return nil }
+
+            let cfg = SCStreamConfiguration()
+            cfg.width = Int(win.frame.width)         // nominal (point) resolution, like before
+            cfg.height = Int(win.frame.height)
+            cfg.showsCursor = false
+            cfg.ignoreShadowsSingleWindow = true
+
+            let filter = SCContentFilter(desktopIndependentWindow: win)
+            let cg = try await SCScreenshotManager.captureImage(
+                contentFilter: filter, configuration: cfg)
+            return NSImage(cgImage: cg, size: NSSize(width: cg.width, height: cg.height))
+        } catch {
+            return nil
+        }
     }
 }
