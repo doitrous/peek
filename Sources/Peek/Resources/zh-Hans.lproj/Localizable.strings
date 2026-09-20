@@ -1,0 +1,131 @@
+/* Simplified Chinese */
+
+/* Settings — sidebar */
+"General" = "通用";
+"Appearance" = "外观";
+"Behavior" = "行为";
+"Shortcuts" = "快捷键";
+"Apps" = "应用";
+
+/* Settings — General */
+"Start Peek at login" = "登录时启动 Peek";
+"Menu-bar icon" = "菜单栏图标";
+"Show menu-bar icon" = "显示菜单栏图标";
+"Icon shape" = "图标形状";
+"Icon tint" = "图标颜色";
+"Language" = "语言";
+"The switcher and settings use this language." = "切换器和设置使用此语言。";
+"Support" = "支持";
+"Peek is free and open source." = "Peek 是免费的开源软件。";
+"If it saves you time, you can chip in." = "如果它为你节省了时间，欢迎小额赞助。";
+"Support Peek" = "支持 Peek";
+"Contribute to the project" = "为项目做贡献";
+"Peek is open source — issues and PRs welcome." = "Peek 是开源项目——欢迎提交 issue 和 PR。";
+"Contribute" = "参与贡献";
+
+/* Settings — Appearance */
+"Theme" = "主题";
+"Show a preview of the selected window" = "显示所选窗口的预览";
+"Animations" = "动画";
+"Enable animations" = "启用动画";
+"Fade in and out" = "淡入淡出";
+"Appear delay" = "出现延迟";
+
+/* Settings — Behavior */
+"On key release" = "松开按键时";
+"Navigate with arrow keys" = "使用方向键导航";
+"Screens" = "屏幕";
+"Show on" = "显示于";
+"Spaces" = "桌面空间";
+"Active Space keeps the switcher on the desktop you're using." = "“当前空间”会让切换器保持在你正在使用的桌面上。";
+
+/* Settings — Shortcuts */
+"Activation" = "激活";
+"Open the switcher with" = "打开切换器的按键";
+"Hold the modifier and tap Tab to cycle; release to act." = "按住修饰键并轻点 Tab 循环切换；松开即执行。";
+"While the switcher is open" = "切换器打开时";
+"Next window" = "下一个窗口";
+"Previous window" = "上一个窗口";
+"Navigate (if arrow keys are on)" = "导航（若已启用方向键）";
+"Cancel" = "取消";
+"Switch to that window" = "切换到该窗口";
+
+/* Settings — Apps */
+"Hidden apps" = "隐藏的应用";
+"Apps listed here are excluded from the switcher." = "此处列出的应用将从切换器中排除。";
+"No hidden apps." = "没有隐藏的应用。";
+"Add app…" = "添加应用…";
+
+/* Enum labels */
+"System" = "系统";
+"Light" = "浅色";
+"Dark" = "深色";
+"Switch to the selected window" = "切换到所选窗口";
+"Cancel — don't switch" = "取消——不切换";
+"Main display" = "主显示器";
+"Display with the pointer" = "指针所在的显示器";
+"All Spaces" = "所有空间";
+"Active Space only" = "仅当前空间";
+"Peek mark" = "Peek 标志";
+"Stack" = "堆叠";
+"Cards" = "卡片";
+"Grid" = "网格";
+"Arrows" = "箭头";
+"Monochrome" = "单色";
+"Accent color" = "强调色";
+
+/* Menu bar */
+"Sticky apps" = "常驻应用";
+"Settings…" = "设置…";
+"Switching Insights…" = "切换分析…";
+"Check for Updates…" = "检查更新…";
+"Support Peek ♥" = "支持 Peek ♥";
+"Quit Peek" = "退出 Peek";
+
+/* Accessibility alert */
+"Peek needs Accessibility permission" = "Peek 需要“辅助功能”权限";
+"Enable Peek under System Settings → Privacy & Security → Accessibility, then relaunch." = "请在“系统设置 → 隐私与安全性 → 辅助功能”中启用 Peek，然后重新启动。";
+
+/* Switcher */
+"current" = "当前";
+"next ⌘-Tab" = "下一次 ⌘-Tab";
+
+/* Intro */
+"A learning layer: the more you switch to an app, the higher Peek floats it — automatically. Your busiest apps drift to the top so they're always the first keystroke away." = "一个学习层：你越常切换到某个应用，Peek 就会自动把它排得越靠前。你最常用的应用会浮到顶部，始终触手可及。";
+"Off by default — you stay in classic ⌘-Tab order until you turn it on." = "默认关闭——在你开启之前，保持经典的 ⌘-Tab 顺序。";
+"Enable sticky apps" = "启用常驻应用";
+"Not now" = "以后再说";
+"Back" = "返回";
+"Next" = "下一步";
+
+/* Dashboard */
+"Switching Insights" = "切换分析";
+"No switches recorded yet" = "尚未记录任何切换";
+"No repeated transitions yet." = "尚无重复的切换。";
+"Pinning" = "固定";
+"Pin the apps you always want first. Pinned apps float to the top of the switcher — always on, whether or not you use sticky apps." = "固定你总想优先看到的应用。无论是否使用常驻应用，固定的应用都会始终浮到切换器顶部。";
+"Toggle a pin anytime with the 📌 button on any row." = "随时用每一行的 📌 按钮固定或取消固定。";
+"Watch the list reorder as apps get used — bars show how favored each one is." = "随着应用被使用，列表会重新排序——条形显示每个应用的偏好程度。";
+"Sticky apps (learning) is off — pins still float to the top. Turn it on from the menu-bar icon to auto-favor your most-used apps." = "常驻应用（学习）已关闭——固定项仍会浮到顶部。从菜单栏图标开启它，即可自动偏好你最常用的应用。";
+"Press ⌘-Tab to switch windows, then reopen this window." = "按 ⌘-Tab 切换窗口，然后重新打开此窗口。";
+"Affinity %d percent" = "亲和度 %d%%";
+
+/* Intro + Dashboard + Switcher (batch 2) */
+"Welcome to Peek" = "欢迎使用 Peek";
+"From a non-pinned app, your next ⌘-Tab jumps straight to your pinned apps — before the rest of the list." = "从未固定的应用出发，你的下一次 ⌘-Tab 会直接跳到已固定的应用——排在列表其余部分之前。";
+"Total switches" = "切换总数";
+"Active days" = "活跃天数";
+"Busiest hour" = "最繁忙时段";
+"Most used" = "最常用";
+"Your apps — switcher order" = "你的应用——切换器顺序";
+"Switches per day" = "每日切换次数";
+"Top apps" = "热门应用";
+"By hour of day" = "按小时分布";
+"Most common transitions" = "最常见的切换";
+"Unpin %@" = "取消固定 %@";
+"Pin %@ to the top" = "将 %@ 固定到顶部";
+"Pin %@" = "固定 %@";
+"%d switches" = "%d 次切换";
+"%@: live CPU and memory usage" = "%@：实时 CPU 与内存占用";
+"Peek favors this app based on how often you switch to it" = "Peek 会根据你切换到该应用的频率来优先显示它";
+"Quit %@ — hold ⌥ to force quit" = "退出 %@——按住 ⌥ 可强制退出";

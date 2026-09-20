@@ -48,7 +48,7 @@ private struct SettingsView: View {
         // blending), so there's no manual background/title-bar band to fight.
         NavigationSplitView {
             List(SettingsSection.allCases, selection: $section) { s in
-                Label(s.title, systemImage: s.symbol).tag(s)
+                Label(L(s.title), systemImage: s.symbol).tag(s)
             }
             .navigationSplitViewColumnWidth(188)
             .toolbar(removing: .sidebarToggle)   // no collapse button — sidebar is always shown
@@ -57,6 +57,7 @@ private struct SettingsView: View {
         }
         .navigationSplitViewStyle(.balanced)
         .tint(.peekAccent)                       // crimson selection highlight
+        .environment(\.layoutDirection, Localize.isRTL ? .rightToLeft : .leftToRight)
         .frame(width: 640, height: 480)
     }
 
@@ -75,40 +76,40 @@ private struct SettingsView: View {
     private var general: some View {
         Form {
             Section {
-                Toggle("Start Peek at login", isOn: $settings.startAtLogin)
+                Toggle(L("Start Peek at login"), isOn: $settings.startAtLogin)
             }
-            Section("Menu-bar icon") {
-                Toggle("Show menu-bar icon", isOn: $settings.showMenuBarIcon)
-                Picker("Icon shape", selection: $settings.iconStyle) {
+            Section(L("Menu-bar icon")) {
+                Toggle(L("Show menu-bar icon"), isOn: $settings.showMenuBarIcon)
+                Picker(L("Icon shape"), selection: $settings.iconStyle) {
                     ForEach(MenuBarIconStyle.allCases, id: \.self) { s in
-                        Label(s.label, systemImage: s.symbol).tag(s)
+                        Label(L(s.label), systemImage: s.symbol).tag(s)
                     }
                 }
                 .disabled(!settings.showMenuBarIcon)
-                Picker("Icon tint", selection: $settings.iconTint) {
-                    ForEach(MenuBarIconTint.allCases, id: \.self) { Text($0.label).tag($0) }
+                Picker(L("Icon tint"), selection: $settings.iconTint) {
+                    ForEach(MenuBarIconTint.allCases, id: \.self) { Text(L($0.label)).tag($0) }
                 }
                 .disabled(!settings.showMenuBarIcon)
             }
-            Section("Language") {
-                Picker("Language", selection: $settings.language) {
-                    ForEach(AppLanguage.allCases, id: \.self) { Text($0.label).tag($0) }
+            Section(L("Language")) {
+                Picker(L("Language"), selection: $settings.language) {
+                    ForEach(AppLanguage.allCases, id: \.self) { Text(L($0.label)).tag($0) }
                 }
-                Text("English for now — more languages coming.")
+                Text(L("The switcher and settings use this language."))
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Section("Support") {
+            Section(L("Support")) {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Peek is free and open source.")
-                        Text("If it saves you time, you can chip in.")
+                        Text(L("Peek is free and open source."))
+                        Text(L("If it saves you time, you can chip in."))
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
                     Button {
                         NSWorkspace.shared.open(peekDonateURL)
                     } label: {
-                        Label("Support Peek", systemImage: "heart.fill")
+                        Label(L("Support Peek"), systemImage: "heart.fill")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 14).padding(.vertical, 8)
@@ -118,15 +119,15 @@ private struct SettingsView: View {
                 }
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Contribute to the project")
-                        Text("Peek is open source — issues and PRs welcome.")
+                        Text(L("Contribute to the project"))
+                        Text(L("Peek is open source — issues and PRs welcome."))
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
                     Button {
                         NSWorkspace.shared.open(peekRepoURL)
                     } label: {
-                        Label("Contribute", systemImage: "chevron.left.forwardslash.chevron.right")
+                        Label(L("Contribute"), systemImage: "chevron.left.forwardslash.chevron.right")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(Color.peekAccent)
                             .padding(.horizontal, 14).padding(.vertical, 8)
@@ -146,17 +147,17 @@ private struct SettingsView: View {
     private var appearance: some View {
         Form {
             Section {
-                Picker("Theme", selection: $settings.theme) {
-                    ForEach(PeekTheme.allCases, id: \.self) { Text($0.label).tag($0) }
+                Picker(L("Theme"), selection: $settings.theme) {
+                    ForEach(PeekTheme.allCases, id: \.self) { Text(L($0.label)).tag($0) }
                 }
-                Toggle("Show a preview of the selected window", isOn: $settings.showPreview)
+                Toggle(L("Show a preview of the selected window"), isOn: $settings.showPreview)
             }
-            Section("Animations") {
-                Toggle("Enable animations", isOn: $settings.animationsEnabled)
-                Toggle("Fade in and out", isOn: $settings.fadeInOut)
+            Section(L("Animations")) {
+                Toggle(L("Enable animations"), isOn: $settings.animationsEnabled)
+                Toggle(L("Fade in and out"), isOn: $settings.fadeInOut)
                     .disabled(!settings.animationsEnabled)
                 HStack {
-                    Text("Appear delay")
+                    Text(L("Appear delay"))
                     Slider(value: $settings.appearDelayMs, in: 0...400, step: 25)
                     Text("\(Int(settings.appearDelayMs)) ms").monospacedDigit()
                         .foregroundStyle(.secondary).frame(width: 56, alignment: .trailing)
@@ -171,19 +172,19 @@ private struct SettingsView: View {
     private var behavior: some View {
         Form {
             Section {
-                Picker("On key release", selection: $settings.releaseAction) {
-                    ForEach(ReleaseAction.allCases, id: \.self) { Text($0.label).tag($0) }
+                Picker(L("On key release"), selection: $settings.releaseAction) {
+                    ForEach(ReleaseAction.allCases, id: \.self) { Text(L($0.label)).tag($0) }
                 }
-                Toggle("Navigate with arrow keys", isOn: $settings.arrowKeys)
+                Toggle(L("Navigate with arrow keys"), isOn: $settings.arrowKeys)
             }
-            Section("Screens") {
-                Picker("Show on", selection: $settings.display) {
-                    ForEach(DisplayChoice.allCases, id: \.self) { Text($0.label).tag($0) }
+            Section(L("Screens")) {
+                Picker(L("Show on"), selection: $settings.display) {
+                    ForEach(DisplayChoice.allCases, id: \.self) { Text(L($0.label)).tag($0) }
                 }
-                Picker("Spaces", selection: $settings.spaces) {
-                    ForEach(SpacesMode.allCases, id: \.self) { Text($0.label).tag($0) }
+                Picker(L("Spaces"), selection: $settings.spaces) {
+                    ForEach(SpacesMode.allCases, id: \.self) { Text(L($0.label)).tag($0) }
                 }
-                Text("Active Space keeps the switcher on the desktop you're using.")
+                Text(L("Active Space keeps the switcher on the desktop you're using."))
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -194,19 +195,19 @@ private struct SettingsView: View {
 
     private var shortcuts: some View {
         Form {
-            Section("Activation") {
-                Picker("Open the switcher with", selection: $settings.activation) {
+            Section(L("Activation")) {
+                Picker(L("Open the switcher with"), selection: $settings.activation) {
                     ForEach(ActivationShortcut.allCases, id: \.self) { Text($0.label).tag($0) }
                 }
-                Text("Hold the modifier and tap Tab to cycle; release to act.")
+                Text(L("Hold the modifier and tap Tab to cycle; release to act."))
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Section("While the switcher is open") {
-                shortcutRow("Tab", "Next window")
-                shortcutRow("⇧ Tab", "Previous window")
-                shortcutRow("↑ ↓", "Navigate (if arrow keys are on)")
-                shortcutRow("Esc", "Cancel")
-                shortcutRow("Click", "Switch to that window")
+            Section(L("While the switcher is open")) {
+                shortcutRow("Tab", L("Next window"))
+                shortcutRow("⇧ Tab", L("Previous window"))
+                shortcutRow("↑ ↓", L("Navigate (if arrow keys are on)"))
+                shortcutRow("Esc", L("Cancel"))
+                shortcutRow("Click", L("Switch to that window"))
             }
         }
         .formStyle(.grouped)
@@ -224,11 +225,11 @@ private struct SettingsView: View {
 
     private var apps: some View {
         Form {
-            Section("Hidden apps") {
-                Text("Apps listed here are excluded from the switcher.")
+            Section(L("Hidden apps")) {
+                Text(L("Apps listed here are excluded from the switcher."))
                     .font(.caption).foregroundStyle(.secondary)
                 if settings.hiddenApps.isEmpty {
-                    Text("No hidden apps.").foregroundStyle(.secondary)
+                    Text(L("No hidden apps.")).foregroundStyle(.secondary)
                 } else {
                     ForEach(settings.hiddenApps, id: \.self) { app in
                         HStack {
@@ -241,7 +242,7 @@ private struct SettingsView: View {
                         }
                     }
                 }
-                Menu("Add app…") {
+                Menu(L("Add app…")) {
                     ForEach(runningApps(), id: \.self) { app in
                         Button(app) { if !settings.isHidden(app) { settings.toggleHidden(app) } }
                     }

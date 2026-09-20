@@ -50,8 +50,30 @@ public enum MenuBarIconTint: String, Codable, CaseIterable {
 }
 
 public enum AppLanguage: String, Codable, CaseIterable {
-    case system, english
-    public var label: String { self == .system ? "System" : "English" }
+    case system, english, spanish, chinese, arabic, french
+    /// Picker label — each language shown as its own endonym (not translated).
+    public var label: String {
+        switch self {
+        case .system:  return "System"
+        case .english: return "English"
+        case .spanish: return "Español"
+        case .chinese: return "中文"
+        case .arabic:  return "العربية"
+        case .french:  return "Français"
+        }
+    }
+    /// BCP-47 code of the matching `.lproj`, or nil to follow the system.
+    public var localeCode: String? {
+        switch self {
+        case .system:  return nil
+        case .english: return "en"
+        case .spanish: return "es"
+        case .chinese: return "zh-Hans"
+        case .arabic:  return "ar"
+        case .french:  return "fr"
+        }
+    }
+    public var isRTL: Bool { self == .arabic }
 }
 
 /// All user settings, persisted as JSON. ObservableObject so the Settings window

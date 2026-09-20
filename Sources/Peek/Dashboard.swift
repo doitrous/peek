@@ -22,7 +22,7 @@ final class DashboardWindowController: NSWindowController {
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered, defer: false
         )
-        window.title = "Peek — Switching Insights"
+        window.title = "Peek — " + L("Switching Insights")
         window.center()
         super.init(window: window)
         window.contentView = NSHostingView(rootView: DashboardView(model: model))
@@ -90,7 +90,7 @@ struct DashboardView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                Text("Switching Insights").font(.largeTitle.bold())
+                Text(L("Switching Insights")).font(.largeTitle.bold())
                 kpiRow
                 if model.total == 0 {
                     emptyState
@@ -109,16 +109,17 @@ struct DashboardView: View {
         }
         .frame(minWidth: 780, minHeight: 560)
         .background(Color(nsColor: .windowBackgroundColor))
+        .environment(\.layoutDirection, Localize.isRTL ? .rightToLeft : .leftToRight)
     }
 
     // KPIs
 
     private var kpiRow: some View {
         HStack(spacing: 14) {
-            kpi("Total switches", "\(model.total)", "arrow.left.arrow.right")
-            kpi("Active days", "\(model.activeDays)", "calendar")
-            kpi("Busiest hour", model.busiestHour.map { "\($0):00" } ?? "—", "clock")
-            kpi("Most used", model.topApp ?? "—", "star.fill")
+            kpi(L("Total switches"), "\(model.total)", "arrow.left.arrow.right")
+            kpi(L("Active days"), "\(model.activeDays)", "calendar")
+            kpi(L("Busiest hour"), model.busiestHour.map { "\($0):00" } ?? "—", "clock")
+            kpi(L("Most used"), model.topApp ?? "—", "star.fill")
         }
     }
 
@@ -135,10 +136,10 @@ struct DashboardView: View {
     // Ranking + pins — the switcher's order, made visible and editable.
 
     private var affinityCard: some View {
-        card("Your apps — switcher order") {
+        card(L("Your apps — switcher order")) {
             let maxScore = max(model.affinity.first?.score ?? 1, 0.0001)
             if !model.stickyEnabled {
-                Label("Sticky apps (learning) is off — pins still float to the top. Turn it on from the menu-bar icon to auto-favor your most-used apps.",
+                Label(L("Sticky apps (learning) is off — pins still float to the top. Turn it on from the menu-bar icon to auto-favor your most-used apps."),
                       systemImage: "info.circle")
                     .font(.callout).foregroundStyle(.secondary).padding(.bottom, 4)
                     .fixedSize(horizontal: false, vertical: true)
@@ -154,7 +155,8 @@ struct DashboardView: View {
                                 .foregroundStyle(a.pinned ? Color.peekAccent : .secondary)
                         }
                         .buttonStyle(.plain)
-                        .help(a.pinned ? "Unpin \(a.app)" : "Pin \(a.app) to the top")
+                        .help(a.pinned ? String(format: L("Unpin %@"), a.app)
+                                       : String(format: L("Pin %@ to the top"), a.app))
 
                         Text(a.app).font(.system(size: 13)).frame(width: 150, alignment: .leading).lineLimit(1)
 
@@ -179,7 +181,7 @@ struct DashboardView: View {
     // Charts
 
     private var perDayCard: some View {
-        card("Switches per day") {
+        card(L("Switches per day")) {
             Chart(model.perDay) { d in
                 AreaMark(x: .value("Day", d.day, unit: .day), y: .value("Switches", d.count))
                     .interpolationMethod(.catmullRom)
@@ -194,7 +196,7 @@ struct DashboardView: View {
                     RuleMark(x: .value("Day", sel.day, unit: .day))
                         .foregroundStyle(.secondary.opacity(0.4))
                         .annotation(position: .top, overflowResolution: .init(x: .fit, y: .disabled)) {
-                            calloutView("\(sel.count) switches", sel.day.formatted(.dateTime.month().day()))
+                            calloutView(String(format: L("%d switches"), sel.count), sel.day.formatted(.dateTime.month().day()))
                         }
                 }
             }
@@ -204,7 +206,7 @@ struct DashboardView: View {
     }
 
     private var topAppsCard: some View {
-        card("Top apps") {
+        card(L("Top apps")) {
             Chart(model.topApps) { a in
                 BarMark(x: .value("Switches", a.count), y: .value("App", a.app))
                     .foregroundStyle(Color.peekAccent.gradient)
@@ -218,7 +220,7 @@ struct DashboardView: View {
     }
 
     private var hourlyCard: some View {
-        card("By hour of day") {
+        card(L("By hour of day")) {
             Chart(model.hourly) { h in
                 BarMark(x: .value("Hour", h.hour), y: .value("Switches", h.count))
                     .foregroundStyle(Color.peekAccent.gradient)
@@ -230,9 +232,9 @@ struct DashboardView: View {
     }
 
     private var transitionsCard: some View {
-        card("Most common transitions") {
+        card(L("Most common transitions")) {
             if model.transitions.isEmpty {
-                Text("No repeated transitions yet.").foregroundStyle(.secondary).padding(.vertical, 8)
+                Text(L("No repeated transitions yet.")).foregroundStyle(.secondary).padding(.vertical, 8)
             } else {
                 Chart(model.transitions) { t in
                     BarMark(x: .value("Count", t.count), y: .value("Transition", t.label))
@@ -271,8 +273,8 @@ struct DashboardView: View {
     private var emptyState: some View {
         VStack(spacing: 10) {
             Image(systemName: "chart.bar.xaxis").font(.system(size: 40)).foregroundStyle(.secondary)
-            Text("No switches recorded yet").font(.title3.bold())
-            Text("Press ⌘-Tab to switch windows, then reopen this window.")
+            Text(L("No switches recorded yet")).font(.title3.bold())
+            Text(L("Press ⌘-Tab to switch windows, then reopen this window."))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, minHeight: 260)

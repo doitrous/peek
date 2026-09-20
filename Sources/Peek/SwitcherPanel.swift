@@ -229,13 +229,13 @@ private struct SwitcherColumn: View {
                         usageChip("cpu", "CPU", "\(Int(u.cpuPercent.rounded()))%")
                         usageChip("memorychip", "RAM", memText(u.memMB))
                     }
-                    .help("\(item.appName): live CPU and memory usage")
+                    .help(String(format: L("%@: live CPU and memory usage"), item.appName))
                 }
             }
             Spacer(minLength: 0)
             if model.showStrength && item.strength > 0.02 {
                 AffinityMeter(level: item.strength)
-                    .help("Peek favors this app based on how often you switch to it")
+                    .help(L("Peek favors this app based on how often you switch to it"))
             }
             Button {
                 model.onQuit?(index, NSEvent.modifierFlags.contains(.option))
@@ -247,7 +247,7 @@ private struct SwitcherColumn: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .help("Quit \(item.appName) — hold ⌥ to force quit")
+            .help(String(format: L("Quit %@ — hold ⌥ to force quit"), item.appName))
             Button {
                 model.onTogglePin?(index)
             } label: {
@@ -259,7 +259,8 @@ private struct SwitcherColumn: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .help(item.isPinned ? "Unpin \(item.appName)" : "Pin \(item.appName)")
+            .help(item.isPinned ? String(format: L("Unpin %@"), item.appName)
+                                : String(format: L("Pin %@"), item.appName))
         }
         .foregroundStyle(.primary)
         .padding(.horizontal, 12).padding(.vertical, 9)
@@ -381,6 +382,6 @@ private struct AffinityMeter: View {
             }
         }
         .frame(height: 15)
-        .accessibilityLabel("Affinity \(Int((level * 100).rounded())) percent")
+        .accessibilityLabel(String(format: L("Affinity %d percent"), Int((level * 100).rounded())))
     }
 }
