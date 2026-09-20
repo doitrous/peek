@@ -50,8 +50,8 @@ final class SwitcherPanel {
     }
 
     private let width: CGFloat = 380
-    private let rowHeight: CGFloat = 56
-    private let chrome: CGFloat = 220 + 28 + 26 + 40   // preview + hints + stats + padding
+    private let rowHeight: CGFloat = 74                 // taller rows: title + app + CPU/RAM chips
+    private let chrome: CGFloat = 220 + 28 + 36 + 40   // preview + hints + system bar + padding
 
     init() {
         panel = NSPanel(
@@ -188,14 +188,13 @@ private struct SwitcherColumn: View {
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.title).font(.system(size: 15)).lineLimit(1)
-                HStack(spacing: 6) {
-                    Text(item.appName).font(.system(size: 12)).foregroundStyle(.white.opacity(0.55)).lineLimit(1)
-                    if let u = model.usage[item.pid] {
-                        Text("\(Int(u.cpuPercent.rounded()))% · \(memText(u.memMB))")
-                            .font(.system(size: 11)).monospacedDigit()
-                            .foregroundStyle(.white.opacity(0.4))
-                            .layoutPriority(1)
+                Text(item.appName).font(.system(size: 12)).foregroundStyle(.white.opacity(0.55)).lineLimit(1)
+                if let u = model.usage[item.pid] {
+                    HStack(spacing: 8) {
+                        usageChip("cpu", "CPU", "\(Int(u.cpuPercent.rounded()))%")
+                        usageChip("memorychip", "RAM", memText(u.memMB))
                     }
+                    .help("\(item.appName): live CPU and memory usage")
                 }
             }
             Spacer(minLength: 0)
@@ -271,26 +270,47 @@ private struct SwitcherColumn: View {
         }
     }
 
+    // Whole-machine stats, clearly labelled and on their own padded bar so it's
+    // obvious this row is the SYSTEM total (vs. the per-app chips on each tile).
     @ViewBuilder private var statsFooter: some View {
         if let s = model.system {
-            HStack(spacing: 14) {
-                stat("cpu", String(format: "%.0f%%", s.cpuPercent))
-                stat("memorychip", String(format: "%.1f / %.0f GB", s.memUsedGB, s.memTotalGB))
+            HStack(spacing: 12) {
+                Text("SYSTEM").font(.system(size: 9, weight: .semibold)).tracking(1)
+                    .foregroundStyle(.white.opacity(0.45))
+                stat("cpu", "CPU", String(format: "%.0f%%", s.cpuPercent))
+                stat("memorychip", "RAM", String(format: "%.1f/%.0f GB", s.memUsedGB, s.memTotalGB))
                 if let b = s.batteryPercent {
-                    stat(batterySymbol(b), "\(b)%")
+                    stat(batterySymbol(b), "BATT", "\(b)%")
                 }
             }
             .font(.system(size: 11))
-            .foregroundStyle(.white.opacity(0.55))
+            .foregroundStyle(.white.opacity(0.75))
+            .padding(.horizontal, 12).padding(.vertical, 6)
             .frame(maxWidth: .infinity)
+            .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
         }
     }
 
-    private func stat(_ symbol: String, _ value: String) -> some View {
-        HStack(spacing: 5) {
+    private func stat(_ symbol: String, _ label: String, _ value: String) -> some View {
+        HStack(spacing: 4) {
             Image(systemName: symbol).font(.system(size: 11))
+            Text(label).font(.system(size: 9, weight: .semibold)).tracking(0.5)
+                .foregroundStyle(.white.opacity(0.5))
             Text(value).monospacedDigit()
         }
+    }
+
+    // Labelled, padded per-app usage chip (e.g. "🖥 CPU 12%").
+    private func usageChip(_ symbol: String, _ label: String, _ value: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: symbol).font(.system(size: 9))
+            Text(label).font(.system(size: 9, weight: .semibold)).tracking(0.5)
+                .foregroundStyle(.white.opacity(0.6))
+            Text(value).font(.system(size: 11, weight: .medium)).monospacedDigit()
+        }
+        .foregroundStyle(.white.opacity(0.85))
+        .padding(.horizontal, 7).padding(.vertical, 2)
+        .background(.white.opacity(0.10), in: Capsule())
     }
 
     private func batterySymbol(_ p: Int) -> String {
