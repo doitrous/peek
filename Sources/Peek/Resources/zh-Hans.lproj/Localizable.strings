@@ -147,3 +147,5 @@
 "First / last window" = "第一个 / 最后一个窗口";
 "Pin or unpin the highlighted app" = "固定或取消固定高亮的应用";
 "Quit the highlighted app (⌥ to force)" = "退出高亮的应用（⌥ 强制退出）";
+"No open windows" = "无打开的窗口";
+"Open %@" = "打开 %@";

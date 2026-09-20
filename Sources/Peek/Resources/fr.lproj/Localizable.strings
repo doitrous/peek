@@ -147,3 +147,5 @@
 "First / last window" = "Première / dernière fenêtre";
 "Pin or unpin the highlighted app" = "Épingler ou désépingler l’app sélectionnée";
 "Quit the highlighted app (⌥ to force)" = "Quitter l’app sélectionnée (⌥ pour forcer)";
+"No open windows" = "Aucune fenêtre ouverte";
+"Open %@" = "Ouvrir %@";

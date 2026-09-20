@@ -10,8 +10,13 @@ private func _AXUIElementGetWindow(_ element: AXUIElement, _ identifier: UnsafeM
 /// Brings the chosen window's app forward and raises the matching window.
 final class WindowActivator {
     func activate(_ window: WindowInfo) {
-        NSRunningApplication(processIdentifier: window.pid)?
-            .activate(options: [.activateIgnoringOtherApps])
+        let app = NSRunningApplication(processIdentifier: window.pid)
+        app?.activate(options: [.activateIgnoringOtherApps])
+        // No window to raise — reopen the app so it surfaces (or creates) one.
+        if window.isWindowless {
+            if let url = app?.bundleURL { NSWorkspace.shared.open(url) }
+            return
+        }
         raiseWindow(pid: window.pid, windowID: window.windowID, title: window.title)
     }
 

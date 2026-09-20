@@ -147,3 +147,5 @@
 "First / last window" = "Primera / última ventana";
 "Pin or unpin the highlighted app" = "Fijar o dejar de fijar la app resaltada";
 "Quit the highlighted app (⌥ to force)" = "Cerrar la app resaltada (⌥ para forzar)";
+"No open windows" = "Sin ventanas abiertas";
+"Open %@" = "Abrir %@";

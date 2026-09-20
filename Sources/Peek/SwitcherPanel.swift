@@ -10,6 +10,7 @@ struct SwitcherItem: Identifiable {
     let pid: pid_t
     var isPinned: Bool
     var strength: Double = 0                  // 0...1 learned affinity (shown when learning is on)
+    var isWindowless = false                  // running app with no windows — rendered as a compact tile
 }
 
 final class SwitcherModel: ObservableObject {
@@ -186,9 +187,10 @@ private struct SwitcherColumn: View {
             if model.showPreview { preview }
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 3) {
-                    ForEach(Array(model.items.enumerated()), id: \.element.id) { idx, item in
+                    ForEach(windowedItems, id: \.element.id) { idx, item in
                         row(item, index: idx, selected: idx == model.selected)
                     }
+                    if !windowlessItems.isEmpty { windowlessTiles }
                 }
             }
             hints
@@ -210,13 +212,62 @@ private struct SwitcherColumn: View {
         // No animation on selection — hover/keyboard highlight must snap instantly.
     }
 
+    // Global (model.items) indices split by kind, so selection/⌘Tab stay one sequence.
+    private var windowedItems: [(offset: Int, element: SwitcherItem)] {
+        Array(model.items.enumerated()).filter { !$0.element.isWindowless }
+    }
+    private var windowlessItems: [(offset: Int, element: SwitcherItem)] {
+        Array(model.items.enumerated()).filter { $0.element.isWindowless }
+    }
+
+    private var windowlessTiles: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(L("No open windows"))
+                .font(.system(size: 10, weight: .semibold)).tracking(0.5)
+                .foregroundStyle(.secondary).padding(.leading, 4)
+                .overlay(Divider().overlay(.primary.opacity(0.12)), alignment: .top)
+                .padding(.top, 6)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 76), spacing: 8)],
+                      alignment: .leading, spacing: 8) {
+                ForEach(windowlessItems, id: \.element.id) { idx, item in
+                    tile(item, index: idx, selected: idx == model.selected)
+                }
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    private func tile(_ item: SwitcherItem, index: Int, selected: Bool) -> some View {
+        VStack(spacing: 4) {
+            if let icon = item.icon {
+                Image(nsImage: icon).resizable().frame(width: 34, height: 34)
+            } else {
+                RoundedRectangle(cornerRadius: 8).fill(.secondary.opacity(0.25)).frame(width: 34, height: 34)
+            }
+            Text(item.appName).font(.system(size: 10)).lineLimit(1).truncationMode(.tail)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8).padding(.horizontal, 4)
+        .background(RoundedRectangle(cornerRadius: 10)
+            .fill(selected ? Color.peekAccent.opacity(0.34) : .clear))
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            if hovering, model.selected != index { model.selected = index; model.onSelect?(index) }
+        }
+        .onTapGesture { model.selected = index; model.onChoose?() }
+        .help(String(format: L("Open %@"), item.appName))
+    }
+
     private var preview: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 14).fill(.primary.opacity(0.06))
             if let img = model.preview {
-                Image(nsImage: img).resizable().aspectRatio(contentMode: .fit).padding(8)
+                Image(nsImage: img).resizable().aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(4)
             } else if let icon = current?.icon {
-                Image(nsImage: icon).resizable().aspectRatio(contentMode: .fit).frame(width: 72, height: 72)
+                Image(nsImage: icon).resizable().aspectRatio(contentMode: .fit).frame(width: 112, height: 112)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Spacer()
