@@ -23,6 +23,8 @@ that **learns which apps you actually use**.
 - **Per-app CPU / RAM** — each tile shows the app's live CPU% and memory. Sampled
   only for the visible windows, only while the switcher is open, via a cheap
   per-pid `proc_pid_rusage` call — no global scan, no background polling.
+- **Quit from the switcher** — an ✕ button on every row quits that app; hold ⌥
+  while clicking to force quit. The row disappears immediately.
 
 ## Build & run
 
