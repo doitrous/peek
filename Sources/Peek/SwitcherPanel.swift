@@ -6,6 +6,7 @@ struct SwitcherItem: Identifiable {
     let title: String
     let appName: String
     let icon: NSImage?
+    let pid: pid_t
     var isPinned: Bool
     var strength: Double = 0                  // 0...1 learned affinity (shown when learning is on)
 }
@@ -19,6 +20,7 @@ final class SwitcherModel: ObservableObject {
     var onSelect: ((Int) -> Void)?            // hover moved the highlight
     var onChoose: (() -> Void)?               // a row was clicked
     var onTogglePin: ((Int) -> Void)?         // pin button on a row
+    var onQuit: ((Int, Bool) -> Void)?        // quit button on a row (force = ⌥)
 }
 
 /// Borderless, non-activating column pinned to the left edge of the main screen.
@@ -40,6 +42,10 @@ final class SwitcherPanel {
     /// Called when a row's pin button is clicked.
     var onTogglePin: ((Int) -> Void)? {
         get { model.onTogglePin } set { model.onTogglePin = newValue }
+    }
+    /// Called when a row's quit button is clicked (force == ⌥ held).
+    var onQuit: ((Int, Bool) -> Void)? {
+        get { model.onQuit } set { model.onQuit = newValue }
     }
 
     private let width: CGFloat = 380
@@ -93,6 +99,16 @@ final class SwitcherPanel {
             model.items[i].isPinned = pinned
         }
     }
+
+    /// Remove every row for a quit app and keep the selection in range.
+    func removeItems(pid: pid_t) {
+        model.items.removeAll { $0.pid == pid }
+        if model.selected >= model.items.count {
+            model.selected = max(0, model.items.count - 1)
+        }
+    }
+
+    var itemCount: Int { model.items.count }
 
     func hide() {
         isShown = false
@@ -175,6 +191,17 @@ private struct SwitcherColumn: View {
                 AffinityMeter(level: item.strength)
                     .help("Peek favors this app based on how often you switch to it")
             }
+            Button {
+                model.onQuit?(index, NSEvent.modifierFlags.contains(.option))
+            } label: {
+                Image(systemName: "xmark.circle")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.red.opacity(0.75))
+                    .frame(width: 26, height: 26)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("Quit \(item.appName) — hold ⌥ to force quit")
             Button {
                 model.onTogglePin?(index)
             } label: {

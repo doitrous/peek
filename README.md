@@ -20,6 +20,8 @@ that **learns which apps you actually use**.
   a time.
 - **Live system footer** — CPU, memory, and battery at the bottom of the column,
   sampled on a light 2s timer.
+- **Quit from the switcher** — an ✕ button on every row quits that app; hold ⌥
+  while clicking to force quit. The row disappears immediately.
 
 ## Build & run
 

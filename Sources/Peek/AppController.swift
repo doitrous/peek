@@ -27,6 +27,7 @@ final class AppController: NSObject, NSApplicationDelegate {
         panel.onSelect = { [weak self] _ in self?.updatePreview() }   // hover moved highlight
         panel.onChoose = { [weak self] in self?.commit() }            // row clicked
         panel.onTogglePin = { [weak self] idx in self?.togglePin(at: idx) }
+        panel.onQuit = { [weak self] idx, force in self?.quitApp(at: idx, force: force) }
 
         systemStats.onUpdate = { [weak self] snap in
             guard let self, self.panel.isShown else { return }
@@ -68,7 +69,7 @@ final class AppController: NSObject, NSApplicationDelegate {
             let maxAff = max(aff.values.max() ?? 0, 0.0001)
 
             let switcherItems = windows.map { w in
-                SwitcherItem(title: w.title, appName: w.appName, icon: w.appIcon,
+                SwitcherItem(title: w.title, appName: w.appName, icon: w.appIcon, pid: w.pid,
                              isPinned: pins.isPinned(w.appName),
                              strength: min(1, (aff[w.appName] ?? 0) / maxAff))
             }
@@ -114,6 +115,22 @@ final class AppController: NSObject, NSApplicationDelegate {
     }
 
     private func cancel() { panel.hide() }
+
+    // Quit (or force-quit) the app for a row, then drop its windows from the list.
+    private func quitApp(at index: Int, force: Bool) {
+        guard windows.indices.contains(index) else { return }
+        let pid = windows[index].pid
+        if let app = NSRunningApplication(processIdentifier: pid) {
+            force ? app.forceTerminate() : app.terminate()
+        }
+        windows.removeAll { $0.pid == pid }
+        panel.removeItems(pid: pid)
+        if windows.isEmpty {
+            panel.hide()
+        } else {
+            updatePreview()
+        }
+    }
 
     // Pin/unpin from a switcher row without switching. Pins float immediately next ⌘-Tab.
     private func togglePin(at index: Int) {
