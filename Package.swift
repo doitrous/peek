@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "Peek",
+    defaultLocalization: "en",
     platforms: [.macOS(.v14)],
     dependencies: [
         // Auto-update framework (EdDSA-signed appcast from GitHub Releases).
@@ -21,6 +22,7 @@ let package = Package(
                 "PeekCore",
                 .product(name: "Sparkle", package: "Sparkle"),
             ],
+            resources: [.process("Resources")],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
         .testTarget(

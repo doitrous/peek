@@ -1,0 +1,131 @@
+/* Spanish */
+
+/* Settings — sidebar */
+"General" = "General";
+"Appearance" = "Apariencia";
+"Behavior" = "Comportamiento";
+"Shortcuts" = "Atajos";
+"Apps" = "Apps";
+
+/* Settings — General */
+"Start Peek at login" = "Iniciar Peek al arrancar sesión";
+"Menu-bar icon" = "Icono de la barra de menús";
+"Show menu-bar icon" = "Mostrar icono en la barra de menús";
+"Icon shape" = "Forma del icono";
+"Icon tint" = "Color del icono";
+"Language" = "Idioma";
+"The switcher and settings use this language." = "El conmutador y los ajustes usan este idioma.";
+"Support" = "Apoyar";
+"Peek is free and open source." = "Peek es gratis y de código abierto.";
+"If it saves you time, you can chip in." = "Si te ahorra tiempo, puedes contribuir.";
+"Support Peek" = "Apoyar a Peek";
+"Contribute to the project" = "Contribuir al proyecto";
+"Peek is open source — issues and PRs welcome." = "Peek es de código abierto: se agradecen issues y PRs.";
+"Contribute" = "Contribuir";
+
+/* Settings — Appearance */
+"Theme" = "Tema";
+"Show a preview of the selected window" = "Mostrar una vista previa de la ventana seleccionada";
+"Animations" = "Animaciones";
+"Enable animations" = "Activar animaciones";
+"Fade in and out" = "Aparecer y desaparecer con fundido";
+"Appear delay" = "Retraso de aparición";
+
+/* Settings — Behavior */
+"On key release" = "Al soltar la tecla";
+"Navigate with arrow keys" = "Navegar con las flechas";
+"Screens" = "Pantallas";
+"Show on" = "Mostrar en";
+"Spaces" = "Espacios";
+"Active Space keeps the switcher on the desktop you're using." = "«Espacio activo» mantiene el conmutador en el escritorio que estás usando.";
+
+/* Settings — Shortcuts */
+"Activation" = "Activación";
+"Open the switcher with" = "Abrir el conmutador con";
+"Hold the modifier and tap Tab to cycle; release to act." = "Mantén el modificador y pulsa Tab para avanzar; suelta para actuar.";
+"While the switcher is open" = "Mientras el conmutador está abierto";
+"Next window" = "Ventana siguiente";
+"Previous window" = "Ventana anterior";
+"Navigate (if arrow keys are on)" = "Navegar (si las flechas están activadas)";
+"Cancel" = "Cancelar";
+"Switch to that window" = "Cambiar a esa ventana";
+
+/* Settings — Apps */
+"Hidden apps" = "Apps ocultas";
+"Apps listed here are excluded from the switcher." = "Las apps de esta lista se excluyen del conmutador.";
+"No hidden apps." = "No hay apps ocultas.";
+"Add app…" = "Añadir app…";
+
+/* Enum labels */
+"System" = "Sistema";
+"Light" = "Claro";
+"Dark" = "Oscuro";
+"Switch to the selected window" = "Cambiar a la ventana seleccionada";
+"Cancel — don't switch" = "Cancelar: no cambiar";
+"Main display" = "Pantalla principal";
+"Display with the pointer" = "Pantalla con el puntero";
+"All Spaces" = "Todos los espacios";
+"Active Space only" = "Solo el espacio activo";
+"Peek mark" = "Marca Peek";
+"Stack" = "Pila";
+"Cards" = "Tarjetas";
+"Grid" = "Cuadrícula";
+"Arrows" = "Flechas";
+"Monochrome" = "Monocromo";
+"Accent color" = "Color de acento";
+
+/* Menu bar */
+"Sticky apps" = "Apps fijas";
+"Settings…" = "Ajustes…";
+"Switching Insights…" = "Estadísticas de cambio…";
+"Check for Updates…" = "Buscar actualizaciones…";
+"Support Peek ♥" = "Apoyar a Peek ♥";
+"Quit Peek" = "Salir de Peek";
+
+/* Accessibility alert */
+"Peek needs Accessibility permission" = "Peek necesita permiso de Accesibilidad";
+"Enable Peek under System Settings → Privacy & Security → Accessibility, then relaunch." = "Activa Peek en Ajustes del Sistema → Privacidad y seguridad → Accesibilidad y vuelve a abrirlo.";
+
+/* Switcher */
+"current" = "actual";
+"next ⌘-Tab" = "siguiente ⌘-Tab";
+
+/* Intro */
+"A learning layer: the more you switch to an app, the higher Peek floats it — automatically. Your busiest apps drift to the top so they're always the first keystroke away." = "Una capa de aprendizaje: cuanto más cambias a una app, más arriba la coloca Peek, automáticamente. Tus apps más usadas suben a la cima para estar siempre a una tecla de distancia.";
+"Off by default — you stay in classic ⌘-Tab order until you turn it on." = "Desactivado por defecto: mantienes el orden clásico de ⌘-Tab hasta que lo actives.";
+"Enable sticky apps" = "Activar apps fijas";
+"Not now" = "Ahora no";
+"Back" = "Atrás";
+"Next" = "Siguiente";
+
+/* Dashboard */
+"Switching Insights" = "Estadísticas de cambio";
+"No switches recorded yet" = "Aún no hay cambios registrados";
+"No repeated transitions yet." = "Aún no hay transiciones repetidas.";
+"Pinning" = "Fijar";
+"Pin the apps you always want first. Pinned apps float to the top of the switcher — always on, whether or not you use sticky apps." = "Fija las apps que siempre quieres primero. Las apps fijadas suben a la cima del conmutador, siempre, uses o no las apps fijas.";
+"Toggle a pin anytime with the 📌 button on any row." = "Fija o desfija cuando quieras con el botón 📌 de cada fila.";
+"Watch the list reorder as apps get used — bars show how favored each one is." = "Observa cómo se reordena la lista según el uso: las barras muestran cuánto se prefiere cada app.";
+"Sticky apps (learning) is off — pins still float to the top. Turn it on from the menu-bar icon to auto-favor your most-used apps." = "Las apps fijas (aprendizaje) están desactivadas: los anclajes siguen subiendo. Actívalas desde el icono de la barra de menús para favorecer tus apps más usadas.";
+"Press ⌘-Tab to switch windows, then reopen this window." = "Pulsa ⌘-Tab para cambiar de ventana y luego vuelve a abrir esta ventana.";
+"Affinity %d percent" = "Afinidad %d por ciento";
+
+/* Intro + Dashboard + Switcher (batch 2) */
+"Welcome to Peek" = "Te damos la bienvenida a Peek";
+"From a non-pinned app, your next ⌘-Tab jumps straight to your pinned apps — before the rest of the list." = "Desde una app no fijada, tu siguiente ⌘-Tab salta directamente a tus apps fijadas, antes que el resto de la lista.";
+"Total switches" = "Cambios totales";
+"Active days" = "Días activos";
+"Busiest hour" = "Hora más activa";
+"Most used" = "Más usada";
+"Your apps — switcher order" = "Tus apps: orden del conmutador";
+"Switches per day" = "Cambios por día";
+"Top apps" = "Apps principales";
+"By hour of day" = "Por hora del día";
+"Most common transitions" = "Transiciones más comunes";
+"Unpin %@" = "Dejar de fijar %@";
+"Pin %@ to the top" = "Fijar %@ arriba";
+"Pin %@" = "Fijar %@";
+"%d switches" = "%d cambios";
+"%@: live CPU and memory usage" = "%@: uso de CPU y memoria en vivo";
+"Peek favors this app based on how often you switch to it" = "Peek favorece esta app según la frecuencia con que cambias a ella";
+"Quit %@ — hold ⌥ to force quit" = "Salir de %@ — mantén ⌥ para forzar la salida";

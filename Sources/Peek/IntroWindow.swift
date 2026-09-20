@@ -16,7 +16,7 @@ final class IntroWindowController: NSWindowController, NSWindowDelegate {
             styleMask: [.titled, .closable],
             backing: .buffered, defer: false
         )
-        window.title = "Welcome to Peek"
+        window.title = L("Welcome to Peek")
         window.isReleasedWhenClosed = false
         super.init(window: window)
         window.delegate = self
@@ -61,6 +61,7 @@ private struct IntroView: View {
             Divider()
             footer.padding(.horizontal, 20).padding(.vertical, 14)
         }
+        .environment(\.layoutDirection, Localize.isRTL ? .rightToLeft : .leftToRight)
     }
 
     private var footer: some View {
@@ -71,12 +72,12 @@ private struct IntroView: View {
             }
             Spacer()
             if step == 0 {
-                Button("Next") { step = 1 }
+                Button(L("Next")) { step = 1 }
                     .controlSize(.large).keyboardShortcut(.defaultAction)
             } else {
-                Button("Back") { step = 0 }.controlSize(.large)
-                Button("Not now", action: onNotNow).controlSize(.large)
-                Button("Enable sticky apps", action: onEnable)
+                Button(L("Back")) { step = 0 }.controlSize(.large)
+                Button(L("Not now"), action: onNotNow).controlSize(.large)
+                Button(L("Enable sticky apps"), action: onEnable)
                     .controlSize(.large).keyboardShortcut(.defaultAction)
             }
         }
@@ -104,13 +105,13 @@ private struct PinningStep: View {
         HStack(spacing: 22) {
             miniColumn.frame(width: 250)
             VStack(alignment: .leading, spacing: 14) {
-                Text("Pinning").font(.title.bold())
-                Text("Pin the apps you always want first. Pinned apps float to the top of the switcher — always on, whether or not you use sticky apps.")
+                Text(L("Pinning")).font(.title.bold())
+                Text(L("Pin the apps you always want first. Pinned apps float to the top of the switcher — always on, whether or not you use sticky apps."))
                     .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                Label("From a non-pinned app, your next ⌘-Tab jumps straight to your pinned apps — before the rest of the list.",
+                Label(L("From a non-pinned app, your next ⌘-Tab jumps straight to your pinned apps — before the rest of the list."),
                       systemImage: "arrow.turn.down.right")
                     .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                Label("Toggle a pin anytime with the 📌 button on any row.", systemImage: "pin")
+                Label(L("Toggle a pin anytime with the 📌 button on any row."), systemImage: "pin")
                     .font(.callout).foregroundStyle(.secondary)
                 Spacer(minLength: 0)
             }
@@ -130,13 +131,13 @@ private struct PinningStep: View {
                         .foregroundStyle(.white)
                     Text(r.name).font(.system(size: 13))
                     if r.current {
-                        Text("current").font(.system(size: 10)).foregroundStyle(.secondary)
+                        Text(L("current")).font(.system(size: 10)).foregroundStyle(.secondary)
                             .padding(.horizontal, 5).padding(.vertical, 1)
                             .background(Color.secondary.opacity(0.15), in: Capsule())
                     }
                     Spacer(minLength: 0)
                     if r.nextHop {
-                        Text("next ⌘-Tab").font(.system(size: 10, weight: .medium))
+                        Text(L("next ⌘-Tab")).font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color.peekAccent)
                     }
                     if r.pinned {
@@ -192,12 +193,12 @@ private struct StickyStep: View {
         HStack(spacing: 22) {
             demo.frame(width: 250)
             VStack(alignment: .leading, spacing: 14) {
-                Text("Sticky apps").font(.title.bold())
-                Text("A learning layer: the more you switch to an app, the higher Peek floats it — automatically. Your busiest apps drift to the top so they're always the first keystroke away.")
+                Text(L("Sticky apps")).font(.title.bold())
+                Text(L("A learning layer: the more you switch to an app, the higher Peek floats it — automatically. Your busiest apps drift to the top so they're always the first keystroke away."))
                     .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                Label("Watch the list reorder as apps get used — bars show how favored each one is.", systemImage: "sparkles")
+                Label(L("Watch the list reorder as apps get used — bars show how favored each one is."), systemImage: "sparkles")
                     .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                Label("Off by default — you stay in classic ⌘-Tab order until you turn it on.", systemImage: "power")
+                Label(L("Off by default — you stay in classic ⌘-Tab order until you turn it on."), systemImage: "power")
                     .font(.callout).foregroundStyle(.secondary)
                 Spacer(minLength: 0)
             }

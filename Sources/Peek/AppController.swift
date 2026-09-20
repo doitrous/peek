@@ -213,9 +213,11 @@ final class AppController: NSObject, NSApplicationDelegate {
     // MARK: Applying settings
 
     private func applyLiveSettings() {
+        Localize.languageCode = settings.language.localeCode
         applyTheme()
         applyLoginItem()
         applyMenuBarIcon()
+        statusItem?.menu = buildMenu()          // refresh menu titles in the chosen language
         hotKey?.modifier = modifierFlag(settings.activation)
         hotKey?.arrowKeysEnabled = settings.arrowKeys
         stickyItem?.state = settings.stickyApps ? .on : .off
@@ -270,24 +272,24 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     private func buildMenu() -> NSMenu {
         let menu = NSMenu()
-        let sticky = menu.addItem(withTitle: "Sticky apps", action: #selector(toggleSticky), keyEquivalent: "")
+        let sticky = menu.addItem(withTitle: L("Sticky apps"), action: #selector(toggleSticky), keyEquivalent: "")
         sticky.target = self
         sticky.state = settings.stickyApps ? .on : .off
         stickyItem = sticky
-        let set = menu.addItem(withTitle: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
+        let set = menu.addItem(withTitle: L("Settings…"), action: #selector(showSettings), keyEquivalent: ",")
         set.target = self
-        let dash = menu.addItem(withTitle: "Switching Insights…", action: #selector(showDashboard), keyEquivalent: "d")
+        let dash = menu.addItem(withTitle: L("Switching Insights…"), action: #selector(showDashboard), keyEquivalent: "d")
         dash.target = self
         menu.addItem(.separator())
-        let upd = menu.addItem(withTitle: "Check for Updates…",
+        let upd = menu.addItem(withTitle: L("Check for Updates…"),
                                action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)),
                                keyEquivalent: "")
         upd.target = updater
         menu.addItem(.separator())
-        let support = menu.addItem(withTitle: "Support Peek ♥", action: #selector(openSupport), keyEquivalent: "")
+        let support = menu.addItem(withTitle: L("Support Peek ♥"), action: #selector(openSupport), keyEquivalent: "")
         support.target = self
         menu.addItem(.separator())
-        let quit = menu.addItem(withTitle: "Quit Peek", action: #selector(quit), keyEquivalent: "q")
+        let quit = menu.addItem(withTitle: L("Quit Peek"), action: #selector(quit), keyEquivalent: "q")
         quit.target = self
         return menu
     }
@@ -392,8 +394,8 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     private func notifyAccessibilityNeeded() {
         let alert = NSAlert()
-        alert.messageText = "Peek needs Accessibility permission"
-        alert.informativeText = "Enable Peek under System Settings → Privacy & Security → Accessibility, then relaunch."
+        alert.messageText = L("Peek needs Accessibility permission")
+        alert.informativeText = L("Enable Peek under System Settings → Privacy & Security → Accessibility, then relaunch.")
         alert.alertStyle = .warning
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()

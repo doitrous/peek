@@ -33,6 +33,12 @@ if [[ -z "$SPARKLE_FW" ]]; then echo "Sparkle.framework not found — run 'swift
 cp -R "$SPARKLE_FW" "$APP/Contents/Frameworks/Sparkle.framework"
 install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/Peek" 2>/dev/null || true
 
+# Bundle SwiftPM-processed resources (localizations) so Bundle.module resolves them.
+RES_BUNDLE=".build/release/Peek_Peek.bundle"
+if [[ -d "$RES_BUNDLE" ]]; then
+  cp -R "$RES_BUNDLE" "$APP/Contents/Resources/Peek_Peek.bundle"
+fi
+
 # Build AppIcon.icns from the 1024px source (all sizes macOS expects).
 if [[ -f Resources/AppIcon.png ]]; then
   ICONSET="$(mktemp -d)/AppIcon.iconset"
