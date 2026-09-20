@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!--
+    Peek runs under the Hardened Runtime (required for notarization) with NO
+    sandbox and NO special exceptions. Accessibility and Screen Recording are
+    granted at runtime via TCC prompts, not entitlements. Keep this list empty
+    unless a real capability needs it — every exception weakens the runtime.
+  -->
+</dict>
+</plist>

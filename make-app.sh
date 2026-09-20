@@ -1,7 +1,17 @@
 #!/bin/bash
-# Builds Peek and installs it straight into /Applications/Peek.app, ad-hoc signed
-# so macOS shows clean "Peek" permission prompts. Quits any running copy first so
-# the bundle can be replaced cleanly.
+# Builds Peek and installs it into /Applications/Peek.app.
+#
+# Signing (best identity available, in order):
+#   1. Developer ID Application  -> Hardened Runtime + timestamp (notarizable).
+#      Set NOTARIZE=1 (with credentials, see below) to also notarize + staple
+#      and emit a distributable dist/Peek.zip.
+#   2. "Peek Local Signing"      -> stable self-signed cert (run ./setup-signing.sh).
+#   3. ad-hoc                    -> fallback so it always builds locally.
+#
+# Notarization needs App Store Connect credentials. Store them once with:
+#   xcrun notarytool store-credentials peek-notary \
+#     --apple-id <you@example.com> --team-id <TEAMID> --password <app-specific-pw>
+# then build with:  NOTARIZE=1 NOTARY_PROFILE=peek-notary ./make-app.sh
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -48,14 +58,48 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 </plist>
 PLIST
 
-# Prefer the stable self-signed identity (run ./setup-signing.sh once) so TCC
-# permission grants persist across rebuilds; fall back to ad-hoc if it's missing.
-IDENTITY="Peek Local Signing"
-if security find-certificate -c "$IDENTITY" >/dev/null 2>&1; then
-  codesign --force --deep --sign "$IDENTITY" "$APP"
-  echo "Signed with stable identity: $IDENTITY"
+# --- Sign -------------------------------------------------------------------
+# Look for a real Developer ID Application cert first (the only kind that can be
+# notarized for distribution); otherwise the stable self-signed identity; else ad-hoc.
+DEVID="$(security find-identity -v -p codesigning 2>/dev/null \
+         | awk -F'"' '/Developer ID Application/ {print $2; exit}')"
+ENTITLEMENTS="Peek.entitlements"
+
+if [[ -n "$DEVID" ]]; then
+  codesign --force --options runtime --timestamp \
+           --entitlements "$ENTITLEMENTS" --sign "$DEVID" "$APP"
+  echo "Signed (Hardened Runtime) with: $DEVID"
+elif security find-certificate -c "Peek Local Signing" >/dev/null 2>&1; then
+  codesign --force --deep --sign "Peek Local Signing" "$APP"
+  echo "Signed with stable self-signed identity: Peek Local Signing (not distributable)."
 else
   codesign --force --deep --sign - "$APP"
-  echo "Ad-hoc signed (run ./setup-signing.sh for stable grants)."
+  echo "Ad-hoc signed (run ./setup-signing.sh for stable grants; not distributable)."
 fi
+
+# --- Notarize + staple (opt-in, needs a Developer ID signature) --------------
+if [[ "${NOTARIZE:-0}" == "1" ]]; then
+  if [[ -z "$DEVID" ]]; then
+    echo "NOTARIZE=1 but no Developer ID Application cert found — create one in" >&2
+    echo "Xcode ▸ Settings ▸ Accounts ▸ Manage Certificates ▸ + Developer ID Application." >&2
+    exit 1
+  fi
+  mkdir -p dist
+  ZIP="dist/Peek.zip"
+  ditto -c -k --keepParent "$APP" "$ZIP"
+  echo "Submitting to Apple notary service…"
+  if [[ -n "${NOTARY_PROFILE:-}" ]]; then
+    xcrun notarytool submit "$ZIP" --keychain-profile "$NOTARY_PROFILE" --wait
+  elif [[ -n "${NOTARY_APPLE_ID:-}" && -n "${NOTARY_PASSWORD:-}" && -n "${NOTARY_TEAM_ID:-}" ]]; then
+    xcrun notarytool submit "$ZIP" --apple-id "$NOTARY_APPLE_ID" \
+          --password "$NOTARY_PASSWORD" --team-id "$NOTARY_TEAM_ID" --wait
+  else
+    echo "No notary credentials. Set NOTARY_PROFILE, or NOTARY_APPLE_ID/PASSWORD/TEAM_ID." >&2
+    exit 1
+  fi
+  xcrun stapler staple "$APP"
+  ditto -c -k --keepParent "$APP" "$ZIP"   # re-zip the stapled bundle for release
+  echo "Notarized + stapled. Distributable archive: $ZIP"
+fi
+
 echo "Installed $APP — launch with:  open $APP"
