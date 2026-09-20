@@ -11,6 +11,9 @@ final class AppController: NSObject, NSApplicationDelegate {
     private let pins = PinStore()
     private let settings = SettingsStore()
     private let systemStats = SystemStats()
+    private let sampler = ProcessSampler()
+    private let sampleQueue = DispatchQueue(label: "com.peek.sampler")
+    private var usageTimer: Timer?
     private let panel = SwitcherPanel()
     private var hotKey: HotKey!
     private var dashboard: DashboardWindowController?
@@ -77,6 +80,7 @@ final class AppController: NSObject, NSApplicationDelegate {
             let start = backwards ? windows.count - 1 : min(1, windows.count - 1)
             panel.setSystemStats(systemStats.current)
             panel.show(items: switcherItems, selected: start, showStrength: settings.stickyApps)
+            startUsageSampling()
         } else {
             panel.advance(backwards: backwards)
         }
@@ -102,11 +106,39 @@ final class AppController: NSObject, NSApplicationDelegate {
         }
     }
 
+    // Live per-app CPU/RAM — only the visible pids, only while shown, on a serial
+    // background queue. Stops the moment the switcher hides.
+    private func startUsageSampling() {
+        let pids = Set(windows.map(\.pid))
+        usageTimer?.invalidate()
+        sampleUsage(pids)
+        usageTimer = Timer.scheduledTimer(withTimeInterval: 1.2, repeats: true) { [weak self] _ in
+            self?.sampleUsage(pids)
+        }
+    }
+
+    private func sampleUsage(_ pids: Set<pid_t>) {
+        sampleQueue.async { [weak self] in
+            guard let self else { return }
+            let usage = self.sampler.sample(pids: pids)
+            DispatchQueue.main.async {
+                guard self.panel.isShown else { return }
+                self.panel.setUsage(usage)
+            }
+        }
+    }
+
+    private func stopUsageSampling() {
+        usageTimer?.invalidate()
+        usageTimer = nil
+    }
+
     private func commit() {
         guard panel.isShown, windows.indices.contains(panel.selectedIndex) else {
-            panel.hide(); return
+            stopUsageSampling(); panel.hide(); return
         }
         let chosen = windows[panel.selectedIndex]
+        stopUsageSampling()
         panel.hide()
         activator.activate(chosen)
         stats.record(SwitchEvent(fromApp: lastApp, toApp: chosen.appName))
@@ -114,7 +146,7 @@ final class AppController: NSObject, NSApplicationDelegate {
         dashboard?.refresh()
     }
 
-    private func cancel() { panel.hide() }
+    private func cancel() { stopUsageSampling(); panel.hide() }
 
     // Quit (or force-quit) the app for a row, then drop its windows from the list.
     private func quitApp(at index: Int, force: Bool) {

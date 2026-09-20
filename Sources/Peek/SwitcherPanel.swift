@@ -17,6 +17,7 @@ final class SwitcherModel: ObservableObject {
     @Published var preview: NSImage?          // only the selected window's thumbnail — RAM-lite
     @Published var showStrength = false       // affinity meters (learning on)
     @Published var system: SystemSnapshot?    // live CPU / RAM / battery footer
+    @Published var usage: [pid_t: AppUsage] = [:]   // live per-app CPU / RAM
     var onSelect: ((Int) -> Void)?            // hover moved the highlight
     var onChoose: (() -> Void)?               // a row was clicked
     var onTogglePin: ((Int) -> Void)?         // pin button on a row
@@ -72,6 +73,7 @@ final class SwitcherPanel {
         model.items = items
         model.selected = max(0, min(selected, items.count - 1))
         model.preview = nil
+        model.usage = [:]
         model.showStrength = showStrength
         isShown = true
 
@@ -92,6 +94,8 @@ final class SwitcherPanel {
     func setPreview(_ image: NSImage?) { model.preview = image }
 
     func setSystemStats(_ snap: SystemSnapshot?) { model.system = snap }
+
+    func setUsage(_ usage: [pid_t: AppUsage]) { model.usage = usage }
 
     /// Flip the pin badge on every row belonging to `app` (keeps row identity/animation).
     func setItemPinned(app: String, pinned: Bool) {
@@ -184,7 +188,15 @@ private struct SwitcherColumn: View {
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.title).font(.system(size: 15)).lineLimit(1)
-                Text(item.appName).font(.system(size: 12)).foregroundStyle(.white.opacity(0.55))
+                HStack(spacing: 6) {
+                    Text(item.appName).font(.system(size: 12)).foregroundStyle(.white.opacity(0.55)).lineLimit(1)
+                    if let u = model.usage[item.pid] {
+                        Text("\(Int(u.cpuPercent.rounded()))% · \(memText(u.memMB))")
+                            .font(.system(size: 11)).monospacedDigit()
+                            .foregroundStyle(.white.opacity(0.4))
+                            .layoutPriority(1)
+                    }
+                }
             }
             Spacer(minLength: 0)
             if model.showStrength && item.strength > 0.02 {
@@ -294,6 +306,10 @@ private struct SwitcherColumn: View {
     private var current: SwitcherItem? {
         model.items.indices.contains(model.selected) ? model.items[model.selected] : nil
     }
+}
+
+private func memText(_ mb: Double) -> String {
+    mb >= 1024 ? String(format: "%.1f GB", mb / 1024) : "\(Int(mb.rounded())) MB"
 }
 
 /// Signal-strength style bars showing how strongly Peek has learned to favor an app.
