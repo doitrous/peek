@@ -16,6 +16,8 @@ final class SwitcherModel: ObservableObject {
     @Published var selected: Int = 0
     @Published var preview: NSImage?          // only the selected window's thumbnail — RAM-lite
     @Published var showStrength = false       // affinity meters (learning on)
+    @Published var showPreview = true         // big window preview at the top
+    @Published var animate = true             // entrance animation
     @Published var system: SystemSnapshot?    // live CPU / RAM / battery footer
     @Published var usage: [pid_t: AppUsage] = [:]   // live per-app CPU / RAM
     var onSelect: ((Int) -> Void)?            // hover moved the highlight
@@ -51,7 +53,9 @@ final class SwitcherPanel {
 
     private let width: CGFloat = 380
     private let rowHeight: CGFloat = 74                 // taller rows: title + app + CPU/RAM chips
-    private let chrome: CGFloat = 220 + 28 + 36 + 40   // preview + hints + system bar + padding
+    private let previewHeight: CGFloat = 220
+    private let nonPreviewChrome: CGFloat = 28 + 36 + 40   // hints + system bar + padding
+    private var fadeOnHide = false
 
     init() {
         panel = NSPanel(
@@ -69,20 +73,39 @@ final class SwitcherPanel {
         panel.contentView = NSHostingView(rootView: SwitcherRoot(model: model))
     }
 
-    func show(items: [SwitcherItem], selected: Int, showStrength: Bool) {
+    func show(items: [SwitcherItem], selected: Int, showStrength: Bool,
+              showPreview: Bool, animate: Bool, fade: Bool,
+              onScreen: NSScreen?, allSpaces: Bool) {
         model.items = items
         model.selected = max(0, min(selected, items.count - 1))
         model.preview = nil
         model.usage = [:]
         model.showStrength = showStrength
+        model.showPreview = showPreview
+        model.animate = animate
         isShown = true
+        fadeOnHide = fade
 
-        let screen = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
-        let wanted = chrome + CGFloat(items.count) * rowHeight
+        panel.collectionBehavior = allSpaces
+            ? [.canJoinAllSpaces, .fullScreenAuxiliary]
+            : [.moveToActiveSpace, .fullScreenAuxiliary]
+
+        let screen = (onScreen ?? NSScreen.main ?? NSScreen.screens.first)?.frame
+            ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        let base = nonPreviewChrome + (showPreview ? previewHeight + 12 : 0)
+        let wanted = base + CGFloat(items.count) * rowHeight
         let height = min(wanted, screen.height - 80)
         panel.setContentSize(NSSize(width: width, height: height))
         panel.setFrameOrigin(NSPoint(x: screen.minX + 20, y: screen.midY - height / 2))
+
+        panel.alphaValue = fade ? 0 : 1
         panel.orderFrontRegardless()
+        if fade {
+            NSAnimationContext.runAnimationGroup { ctx in
+                ctx.duration = 0.14
+                panel.animator().alphaValue = 1
+            }
+        }
     }
 
     func advance(backwards: Bool) {
@@ -116,7 +139,14 @@ final class SwitcherPanel {
 
     func hide() {
         isShown = false
-        panel.orderOut(nil)
+        if fadeOnHide {
+            NSAnimationContext.runAnimationGroup({ ctx in
+                ctx.duration = 0.1
+                panel.animator().alphaValue = 0
+            }, completionHandler: { [weak panel] in panel?.orderOut(nil) })
+        } else {
+            panel.orderOut(nil)
+        }
     }
 }
 
@@ -133,7 +163,7 @@ private struct SwitcherColumn: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            preview
+            if model.showPreview { preview }
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 3) {
                     ForEach(Array(model.items.enumerated()), id: \.element.id) { idx, item in
@@ -150,8 +180,12 @@ private struct SwitcherColumn: View {
         .offset(x: appeared ? 0 : -32)
         .opacity(appeared ? 1 : 0)
         .onAppear {
-            appeared = false
-            withAnimation(.spring(response: 0.32, dampingFraction: 0.8)) { appeared = true }
+            if model.animate {
+                appeared = false
+                withAnimation(.spring(response: 0.32, dampingFraction: 0.8)) { appeared = true }
+            } else {
+                appeared = true
+            }
         }
         // No animation on selection — hover/keyboard highlight must snap instantly.
     }

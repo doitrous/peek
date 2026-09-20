@@ -25,6 +25,13 @@ that **learns which apps you actually use**.
   per-pid `proc_pid_rusage` call — no global scan, no background polling.
 - **Quit from the switcher** — an ✕ button on every row quits that app; hold ⌥
   while clicking to force quit. The row disappears immediately.
+- **Settings** (menu bar → Settings…) — General (login item, menu-bar icon shape
+  & tint, language), Appearance (theme, preview toggle, animations + fade + appear
+  delay), Behavior (release action, arrow-key navigation, which display, Spaces),
+  Shortcuts (⌘/⌥/⌃ + Tab and the in-switcher keys), and Apps (hide apps from the
+  switcher).
+- **Arrow-key navigation** — while holding the activation modifier, use ↑/↓ (or
+  ←/→) to move the selection, not just Tab.
 
 ## Build & run
 
