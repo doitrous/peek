@@ -2,6 +2,7 @@ import AppKit
 import ApplicationServices
 import CoreGraphics
 import ServiceManagement
+import Sparkle
 import PeekCore
 
 /// Wires the menu bar, hotkey, window list, switcher panel, activator, stats and settings together.
@@ -22,6 +23,11 @@ final class AppController: NSObject, NSApplicationDelegate {
     private var settingsWC: SettingsWindowController?
     private var intro: IntroWindowController?
     private var stickyItem: NSMenuItem?
+    // Auto-update via Sparkle. Feed URL + public key live in Info.plist; the
+    // updater checks automatically on schedule and via the menu item below.
+    private let updater = SPUStandardUpdaterController(startingUpdater: true,
+                                                       updaterDelegate: nil,
+                                                       userDriverDelegate: nil)
 
     private var windows: [WindowInfo] = []
     private var lastApp: String?
@@ -272,6 +278,11 @@ final class AppController: NSObject, NSApplicationDelegate {
         set.target = self
         let dash = menu.addItem(withTitle: "Switching Insights…", action: #selector(showDashboard), keyEquivalent: "d")
         dash.target = self
+        menu.addItem(.separator())
+        let upd = menu.addItem(withTitle: "Check for Updates…",
+                               action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)),
+                               keyEquivalent: "")
+        upd.target = updater
         menu.addItem(.separator())
         let support = menu.addItem(withTitle: "Support Peek ♥", action: #selector(openSupport), keyEquivalent: "")
         support.target = self

@@ -23,8 +23,15 @@ pkill -f "Peek.app/Contents/MacOS/Peek" 2>/dev/null || true
 sleep 1
 
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Frameworks"
 cp "$BIN" "$APP/Contents/MacOS/Peek"
+
+# Embed Sparkle.framework (auto-update) and point the executable's runtime search
+# path at Contents/Frameworks so @rpath/Sparkle.framework resolves.
+SPARKLE_FW="$(find .build/artifacts -path '*/macos-arm64*/Sparkle.framework' -type d | head -1)"
+if [[ -z "$SPARKLE_FW" ]]; then echo "Sparkle.framework not found — run 'swift build' first." >&2; exit 1; fi
+cp -R "$SPARKLE_FW" "$APP/Contents/Frameworks/Sparkle.framework"
+install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/Peek" 2>/dev/null || true
 
 # Build AppIcon.icns from the 1024px source (all sizes macOS expects).
 if [[ -f Resources/AppIcon.png ]]; then
@@ -54,6 +61,10 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>LSMinimumSystemVersion</key>  <string>14.0</string>
   <key>LSUIElement</key>            <true/>
   <key>NSHighResolutionCapable</key> <true/>
+  <!-- Sparkle auto-update: appcast on GitHub Releases, EdDSA public key. -->
+  <key>SUFeedURL</key>              <string>https://github.com/doitrous/peek/releases/latest/download/appcast.xml</string>
+  <key>SUPublicEDKey</key>          <string>VpFZQ1nO5iQJELCd59ZytbnP0LpzPV12z8P3RAEG82o=</string>
+  <key>SUEnableAutomaticChecks</key> <true/>
 </dict>
 </plist>
 PLIST
@@ -66,9 +77,20 @@ DEVID="$(security find-identity -v -p codesigning 2>/dev/null \
 ENTITLEMENTS="Peek.entitlements"
 
 if [[ -n "$DEVID" ]]; then
+  # Sign Sparkle's nested code inside-out (required for notarization), then the
+  # framework, then the app. --deep is deliberately avoided per Apple guidance.
+  FW="$APP/Contents/Frameworks/Sparkle.framework"
+  for nested in \
+    "$FW/Versions/B/XPCServices/Downloader.xpc" \
+    "$FW/Versions/B/XPCServices/Installer.xpc" \
+    "$FW/Versions/B/Autoupdate" \
+    "$FW/Versions/B/Updater.app"; do
+    [[ -e "$nested" ]] && codesign --force --options runtime --timestamp --sign "$DEVID" "$nested"
+  done
+  codesign --force --options runtime --timestamp --sign "$DEVID" "$FW"
   codesign --force --options runtime --timestamp \
            --entitlements "$ENTITLEMENTS" --sign "$DEVID" "$APP"
-  echo "Signed (Hardened Runtime) with: $DEVID"
+  echo "Signed (Hardened Runtime, incl. Sparkle) with: $DEVID"
 elif security find-certificate -c "Peek Local Signing" >/dev/null 2>&1; then
   codesign --force --deep --sign "Peek Local Signing" "$APP"
   echo "Signed with stable self-signed identity: Peek Local Signing (not distributable)."
