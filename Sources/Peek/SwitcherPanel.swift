@@ -129,7 +129,7 @@ private struct SwitcherColumn: View {
             appeared = false
             withAnimation(.spring(response: 0.32, dampingFraction: 0.8)) { appeared = true }
         }
-        .animation(.spring(response: 0.28, dampingFraction: 0.82), value: model.selected)
+        // No animation on selection — hover/keyboard highlight must snap instantly.
     }
 
     private var preview: some View {

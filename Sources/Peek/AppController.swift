@@ -75,9 +75,22 @@ final class AppController: NSObject, NSApplicationDelegate {
     }
 
     // Capture only the highlighted window's thumbnail — one image in memory at a time.
+    // Captured OFF the main thread so hover/cycle stays instant; the icon shows
+    // immediately and the screenshot drops in a beat later (stale results discarded).
     private func updatePreview() {
-        guard windows.indices.contains(panel.selectedIndex) else { return }
-        panel.setPreview(WindowLister.capture(windows[panel.selectedIndex].windowID))
+        let idx = panel.selectedIndex
+        guard windows.indices.contains(idx) else { return }
+        let wid = windows[idx].windowID
+        panel.setPreview(nil)   // instant: fall back to the app icon while capturing
+        DispatchQueue.global(qos: .userInteractive).async { [weak self] in
+            let image = WindowLister.capture(wid)
+            DispatchQueue.main.async {
+                guard let self, self.panel.isShown,
+                      self.windows.indices.contains(self.panel.selectedIndex),
+                      self.windows[self.panel.selectedIndex].windowID == wid else { return }
+                self.panel.setPreview(image)
+            }
+        }
     }
 
     private func commit() {
