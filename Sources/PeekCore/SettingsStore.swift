@@ -76,6 +76,11 @@ public enum AppLanguage: String, Codable, CaseIterable {
     public var isRTL: Bool { self == .arabic }
 }
 
+public enum SwitcherPosition: String, Codable, CaseIterable {
+    case leftEdge, center
+    public var label: String { self == .leftEdge ? "Left edge" : "Centered" }
+}
+
 /// All user settings, persisted as JSON. ObservableObject so the Settings window
 /// binds directly; `onChange` lets the app re-apply live (theme, login item, icon).
 public final class SettingsStore: ObservableObject {
@@ -89,6 +94,8 @@ public final class SettingsStore: ObservableObject {
     // Appearance
     @Published public var theme: PeekTheme = .system { didSet { persist() } }
     @Published public var showPreview = true { didSet { persist() } }
+    @Published public var showUsageChips = true { didSet { persist() } }
+    @Published public var showSystemFooter = true { didSet { persist() } }
     @Published public var animationsEnabled = true { didSet { persist() } }
     @Published public var fadeInOut = true { didSet { persist() } }
     @Published public var appearDelayMs: Double = 0 { didSet { persist() } }
@@ -96,11 +103,16 @@ public final class SettingsStore: ObservableObject {
     // Behavior
     @Published public var releaseAction: ReleaseAction = .switchToSelected { didSet { persist() } }
     @Published public var arrowKeys = true { didSet { persist() } }
+    @Published public var wrapCycle = true { didSet { persist() } }
     @Published public var display: DisplayChoice = .pointerDisplay { didSet { persist() } }
+    @Published public var position: SwitcherPosition = .leftEdge { didSet { persist() } }
     @Published public var spaces: SpacesMode = .activeSpace { didSet { persist() } }
+    @Published public var maxVisibleRows: Int = 9 { didSet { persist() } }
 
     // Shortcuts
     @Published public var activation: ActivationShortcut = .commandTab { didSet { persist() } }
+    @Published public var numberKeyJump = true { didSet { persist() } }
+    @Published public var rowActionKeys = true { didSet { persist() } }
 
     // Apps
     @Published public var hiddenApps: [String] = [] { didSet { persist() } }
@@ -126,14 +138,21 @@ public final class SettingsStore: ObservableObject {
             language = p.language
             theme = p.theme
             showPreview = p.showPreview
+            showUsageChips = p.showUsageChips
+            showSystemFooter = p.showSystemFooter
             animationsEnabled = p.animationsEnabled
             fadeInOut = p.fadeInOut
             appearDelayMs = p.appearDelayMs
             releaseAction = p.releaseAction
             arrowKeys = p.arrowKeys
+            wrapCycle = p.wrapCycle
             display = p.display
+            position = p.position
             spaces = p.spaces
+            maxVisibleRows = p.maxVisibleRows
             activation = p.activation
+            numberKeyJump = p.numberKeyJump
+            rowActionKeys = p.rowActionKeys
             hiddenApps = p.hiddenApps
             stickyApps = p.stickyApps
             hasSeenIntro = p.hasSeenIntro
@@ -149,13 +168,15 @@ public final class SettingsStore: ObservableObject {
 
     private func persist() {
         guard loaded else { return }
-        let p = Payload(
-            startAtLogin: startAtLogin, showMenuBarIcon: showMenuBarIcon, iconStyle: iconStyle,
-            iconTint: iconTint, language: language, theme: theme, showPreview: showPreview,
-            animationsEnabled: animationsEnabled, fadeInOut: fadeInOut, appearDelayMs: appearDelayMs,
-            releaseAction: releaseAction, arrowKeys: arrowKeys, display: display, spaces: spaces,
-            activation: activation, hiddenApps: hiddenApps, stickyApps: stickyApps, hasSeenIntro: hasSeenIntro
-        )
+        var p = Payload()
+        p.startAtLogin = startAtLogin; p.showMenuBarIcon = showMenuBarIcon; p.iconStyle = iconStyle
+        p.iconTint = iconTint; p.language = language; p.theme = theme; p.showPreview = showPreview
+        p.showUsageChips = showUsageChips; p.showSystemFooter = showSystemFooter
+        p.animationsEnabled = animationsEnabled; p.fadeInOut = fadeInOut; p.appearDelayMs = appearDelayMs
+        p.releaseAction = releaseAction; p.arrowKeys = arrowKeys; p.wrapCycle = wrapCycle
+        p.display = display; p.position = position; p.spaces = spaces; p.maxVisibleRows = maxVisibleRows
+        p.activation = activation; p.numberKeyJump = numberKeyJump; p.rowActionKeys = rowActionKeys
+        p.hiddenApps = hiddenApps; p.stickyApps = stickyApps; p.hasSeenIntro = hasSeenIntro
         if let data = try? JSONEncoder().encode(p) { try? data.write(to: url, options: .atomic) }
         onChange?()
     }
@@ -170,26 +191,24 @@ public final class SettingsStore: ObservableObject {
         var showPreview = true
         var animationsEnabled = true
         var fadeInOut = true
+        var showUsageChips = true
+        var showSystemFooter = true
         var appearDelayMs: Double = 0
         var releaseAction: ReleaseAction = .switchToSelected
         var arrowKeys = true
+        var wrapCycle = true
         var display: DisplayChoice = .pointerDisplay
+        var position: SwitcherPosition = .leftEdge
         var spaces: SpacesMode = .activeSpace
+        var maxVisibleRows: Int = 9
         var activation: ActivationShortcut = .commandTab
+        var numberKeyJump = true
+        var rowActionKeys = true
         var hiddenApps: [String] = []
         var stickyApps = false
         var hasSeenIntro = false
 
-        init(startAtLogin: Bool, showMenuBarIcon: Bool, iconStyle: MenuBarIconStyle, iconTint: MenuBarIconTint,
-             language: AppLanguage, theme: PeekTheme, showPreview: Bool, animationsEnabled: Bool, fadeInOut: Bool,
-             appearDelayMs: Double, releaseAction: ReleaseAction, arrowKeys: Bool, display: DisplayChoice,
-             spaces: SpacesMode, activation: ActivationShortcut, hiddenApps: [String], stickyApps: Bool, hasSeenIntro: Bool) {
-            self.startAtLogin = startAtLogin; self.showMenuBarIcon = showMenuBarIcon; self.iconStyle = iconStyle
-            self.iconTint = iconTint; self.language = language; self.theme = theme; self.showPreview = showPreview
-            self.animationsEnabled = animationsEnabled; self.fadeInOut = fadeInOut; self.appearDelayMs = appearDelayMs
-            self.releaseAction = releaseAction; self.arrowKeys = arrowKeys; self.display = display; self.spaces = spaces
-            self.activation = activation; self.hiddenApps = hiddenApps; self.stickyApps = stickyApps; self.hasSeenIntro = hasSeenIntro
-        }
+        init() {}   // build with defaults, then assign in persist()
 
         // Defaulted decoding for forward-compatible settings files.
         init(from decoder: Decoder) throws {
@@ -202,14 +221,21 @@ public final class SettingsStore: ObservableObject {
             language = g(.language, .system)
             theme = g(.theme, .system)
             showPreview = g(.showPreview, true)
+            showUsageChips = g(.showUsageChips, true)
+            showSystemFooter = g(.showSystemFooter, true)
             animationsEnabled = g(.animationsEnabled, true)
             fadeInOut = g(.fadeInOut, true)
             appearDelayMs = g(.appearDelayMs, 0)
             releaseAction = g(.releaseAction, .switchToSelected)
             arrowKeys = g(.arrowKeys, true)
+            wrapCycle = g(.wrapCycle, true)
             display = g(.display, .pointerDisplay)
+            position = g(.position, .leftEdge)
             spaces = g(.spaces, .activeSpace)
+            maxVisibleRows = g(.maxVisibleRows, 9)
             activation = g(.activation, .commandTab)
+            numberKeyJump = g(.numberKeyJump, true)
+            rowActionKeys = g(.rowActionKeys, true)
             hiddenApps = g(.hiddenApps, [])
             stickyApps = g(.stickyApps, false)
             hasSeenIntro = g(.hasSeenIntro, false)

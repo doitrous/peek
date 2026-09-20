@@ -151,6 +151,8 @@ private struct SettingsView: View {
                     ForEach(PeekTheme.allCases, id: \.self) { Text(L($0.label)).tag($0) }
                 }
                 Toggle(L("Show a preview of the selected window"), isOn: $settings.showPreview)
+                Toggle(L("Show CPU & memory on each app"), isOn: $settings.showUsageChips)
+                Toggle(L("Show the system stats footer"), isOn: $settings.showSystemFooter)
             }
             Section(L("Animations")) {
                 Toggle(L("Enable animations"), isOn: $settings.animationsEnabled)
@@ -176,6 +178,21 @@ private struct SettingsView: View {
                     ForEach(ReleaseAction.allCases, id: \.self) { Text(L($0.label)).tag($0) }
                 }
                 Toggle(L("Navigate with arrow keys"), isOn: $settings.arrowKeys)
+                Toggle(L("Cycling wraps around the list"), isOn: $settings.wrapCycle)
+            }
+            Section(L("Layout")) {
+                Picker(L("Switcher position"), selection: $settings.position) {
+                    ForEach(SwitcherPosition.allCases, id: \.self) { Text(L($0.label)).tag($0) }
+                }
+                Stepper(value: $settings.maxVisibleRows, in: 3...20) {
+                    HStack {
+                        Text(L("Maximum rows"))
+                        Spacer()
+                        Text("\(settings.maxVisibleRows)").monospacedDigit().foregroundStyle(.secondary)
+                    }
+                }
+                Text(L("Extra windows beyond this scroll within the switcher."))
+                    .font(.caption).foregroundStyle(.secondary)
             }
             Section(L("Screens")) {
                 Picker(L("Show on"), selection: $settings.display) {
@@ -202,10 +219,18 @@ private struct SettingsView: View {
                 Text(L("Hold the modifier and tap Tab to cycle; release to act."))
                     .font(.caption).foregroundStyle(.secondary)
             }
+            Section(L("Extra keys")) {
+                Toggle(L("Number keys 1–9 jump to that window"), isOn: $settings.numberKeyJump)
+                Toggle(L("P pins, Q or W quits the highlighted app"), isOn: $settings.rowActionKeys)
+            }
             Section(L("While the switcher is open")) {
                 shortcutRow("Tab", L("Next window"))
                 shortcutRow("⇧ Tab", L("Previous window"))
                 shortcutRow("↑ ↓", L("Navigate (if arrow keys are on)"))
+                shortcutRow("1 – 9", L("Jump to that window"))
+                shortcutRow("Home / End", L("First / last window"))
+                shortcutRow("P", L("Pin or unpin the highlighted app"))
+                shortcutRow("Q / W", L("Quit the highlighted app (⌥ to force)"))
                 shortcutRow("Esc", L("Cancel"))
                 shortcutRow("Click", L("Switch to that window"))
             }
