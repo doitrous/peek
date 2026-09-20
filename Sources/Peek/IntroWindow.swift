@@ -17,7 +17,6 @@ final class IntroWindowController: NSWindowController, NSWindowDelegate {
             backing: .buffered, defer: false
         )
         window.title = "Welcome to Peek"
-        window.center()
         window.isReleasedWhenClosed = false
         super.init(window: window)
         window.delegate = self
@@ -25,11 +24,10 @@ final class IntroWindowController: NSWindowController, NSWindowDelegate {
         let root = IntroView(
             onEnable: { [weak self] in self?.finish(enable: true) },
             onNotNow: { [weak self] in self?.finish(enable: false) }
-        )
-        let host = NSHostingView(rootView: root)
-        host.frame = window.contentLayoutRect
-        host.autoresizingMask = [.width, .height]
-        window.contentView = host
+        ).frame(width: 640, height: 500)   // fixed → hosting controller sizes the window to this
+        window.contentViewController = NSHostingController(rootView: root)
+        window.setContentSize(NSSize(width: 640, height: 500))
+        window.center()
     }
 
     required init?(coder: NSCoder) { fatalError("not supported") }
@@ -118,6 +116,7 @@ private struct PinningStep: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     private var miniColumn: some View {
@@ -204,6 +203,7 @@ private struct StickyStep: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onAppear(perform: start)
         .onDisappear { timer?.invalidate() }
     }
