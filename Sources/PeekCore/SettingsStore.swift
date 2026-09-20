@@ -69,7 +69,7 @@ public final class SettingsStore: ObservableObject {
     // Behavior
     @Published public var releaseAction: ReleaseAction = .switchToSelected { didSet { persist() } }
     @Published public var arrowKeys = true { didSet { persist() } }
-    @Published public var display: DisplayChoice = .mainDisplay { didSet { persist() } }
+    @Published public var display: DisplayChoice = .pointerDisplay { didSet { persist() } }
     @Published public var spaces: SpacesMode = .activeSpace { didSet { persist() } }
 
     // Shortcuts
@@ -146,7 +146,7 @@ public final class SettingsStore: ObservableObject {
         var appearDelayMs: Double = 0
         var releaseAction: ReleaseAction = .switchToSelected
         var arrowKeys = true
-        var display: DisplayChoice = .mainDisplay
+        var display: DisplayChoice = .pointerDisplay
         var spaces: SpacesMode = .activeSpace
         var activation: ActivationShortcut = .commandTab
         var hiddenApps: [String] = []
@@ -180,7 +180,7 @@ public final class SettingsStore: ObservableObject {
             appearDelayMs = g(.appearDelayMs, 0)
             releaseAction = g(.releaseAction, .switchToSelected)
             arrowKeys = g(.arrowKeys, true)
-            display = g(.display, .mainDisplay)
+            display = g(.display, .pointerDisplay)
             spaces = g(.spaces, .activeSpace)
             activation = g(.activation, .commandTab)
             hiddenApps = g(.hiddenApps, [])

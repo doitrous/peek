@@ -99,7 +99,8 @@ final class AppController: NSObject, NSApplicationDelegate {
                             animate: self.settings.animationsEnabled,
                             fade: self.settings.animationsEnabled && self.settings.fadeInOut,
                             onScreen: self.targetScreen(),
-                            allSpaces: self.settings.spaces == .allSpaces)
+                            allSpaces: self.settings.spaces == .allSpaces,
+                            appearance: self.switcherAppearance())
             self.startUsageSampling()
             self.updatePreview()
         }
@@ -215,10 +216,16 @@ final class AppController: NSObject, NSApplicationDelegate {
     }
 
     private func applyTheme() {
+        NSApp.appearance = switcherAppearance()
+    }
+
+    /// The panel is a floating overlay, so it doesn't inherit NSApp.appearance —
+    /// hand it the same appearance explicitly (nil = follow the system).
+    private func switcherAppearance() -> NSAppearance? {
         switch settings.theme {
-        case .system: NSApp.appearance = nil
-        case .light:  NSApp.appearance = NSAppearance(named: .aqua)
-        case .dark:   NSApp.appearance = NSAppearance(named: .darkAqua)
+        case .system: return nil
+        case .light:  return NSAppearance(named: .aqua)
+        case .dark:   return NSAppearance(named: .darkAqua)
         }
     }
 
