@@ -4,6 +4,8 @@ import PeekCore
 
 /// Where the "Support Peek" buttons (menu bar + Settings) send people.
 let peekDonateURL = URL(string: "https://paypal.me/Omary98")!
+/// The project's GitHub repo (Contribute button).
+let peekRepoURL = URL(string: "https://github.com/doitrous/peek")!
 
 final class SettingsWindowController: NSWindowController {
     init(settings: SettingsStore) {
@@ -114,6 +116,26 @@ private struct SettingsView: View {
                     }
                     .buttonStyle(.plain)
                 }
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Contribute to the project")
+                        Text("Peek is open source — issues and PRs welcome.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button {
+                        NSWorkspace.shared.open(peekRepoURL)
+                    } label: {
+                        Label("Contribute", systemImage: "chevron.left.forwardslash.chevron.right")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Color.peekAccent)
+                            .padding(.horizontal, 14).padding(.vertical, 8)
+                            .overlay(Capsule().strokeBorder(Color.peekAccent, lineWidth: 1.2))
+                    }
+                    .buttonStyle(.plain)
+                }
+                Link("github.com/doitrous/peek", destination: peekRepoURL)
+                    .font(.caption)
             }
         }
         .formStyle(.grouped)
