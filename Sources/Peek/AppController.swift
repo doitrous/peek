@@ -122,9 +122,9 @@ final class AppController: NSObject, NSApplicationDelegate {
         guard windows.indices.contains(idx) else { return }
         let wid = windows[idx].windowID
         panel.setPreview(nil)
-        DispatchQueue.global(qos: .userInteractive).async { [weak self] in
-            let image = WindowLister.capture(wid)
-            DispatchQueue.main.async {
+        Task { [weak self] in
+            let image = await WindowLister.capture(wid)
+            await MainActor.run { [weak self] in
                 guard let self, self.panel.isShown,
                       self.windows.indices.contains(self.panel.selectedIndex),
                       self.windows[self.panel.selectedIndex].windowID == wid else { return }
